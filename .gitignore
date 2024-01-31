@@ -1,0 +1,8 @@
+/.vs
+/.git
+/.idea
+./obj
+./bin
+./wwwroot/Logs
+./appsettings.LocalDevelopment.json
+*.DS_Store
