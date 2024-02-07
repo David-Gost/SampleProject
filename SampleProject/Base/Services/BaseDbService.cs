@@ -1,4 +1,4 @@
-namespace SampleProject.Services.Base;
+namespace SampleProject.Base.Services;
 
 /// <summary>
 /// DbService核心

@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using MySqlConnector;
 using Oracle.ManagedDataAccess.Client;
 
-namespace SampleProject.Until.Base;
+namespace SampleProject.Base.Util;
 
 public class BaseDbConnection 
 {
@@ -41,8 +41,7 @@ public class BaseDbConnection
 
             dbConnectStr = "ConnectionStrings:DefaultConnection";
         }
-
-        var s = _configuration[dbConnectStr];
+        
         return new MySqlConnection(_configuration[dbConnectStr]);
     }
 

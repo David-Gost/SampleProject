@@ -1,7 +1,7 @@
 using System.Dynamic;
 using Microsoft.AspNetCore.Mvc;
 
-namespace SampleProject.Controllers.Base;
+namespace SampleProject.Base.Controllers;
 
 [ApiController]
 public class BaseApiController : ControllerBase

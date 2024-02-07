@@ -1,11 +1,17 @@
 using System.Dynamic;
+using System.Text.Json;
+using SampleProject.Base.Services;
 using SampleProject.Helpers;
 using SampleProject.Models.Custom.RequestFrom.User;
-using SampleProject.Repositories.DB;
-using SampleProject.Services.Base;
+using SampleProject.Models.DB.User;
+using SampleProject.Repositories.DB.User;
+
 
 namespace SampleProject.Services.DB.User;
 
+/// <summary>
+/// 測試用
+/// </summary>
 public class UserService : BaseDbService
 {
     private readonly UserRepository _userRepository;
@@ -22,8 +28,8 @@ public class UserService : BaseDbService
     /// <returns></returns>
     public object GetUserData(GetUserDataParam inputData)
     {
-        var resultData = SystemHelper.BaseReData(_userRepository.GetUserData(inputData));
-        
+        var resultData = SystemHelper.ToExpandoObject(_userRepository.GetUserData(inputData));
+
         //輸出資料轉換
         ReUserData(ref resultData);
         return resultData;
@@ -37,29 +43,49 @@ public class UserService : BaseDbService
     public object GetUserDatas(GetUserDataParam inputData)
     {
         var resultDatas = SystemHelper.BaseReList(_userRepository.GetUserDatas(inputData));
-        foreach (var resultData in  resultDatas)
+        foreach (var resultData in resultDatas)
         {
-            var userData = resultData;
-            ReUserData(ref userData);
+            object? userData = resultData;
+            // ReUserData(ref userData);
         }
+
         return resultDatas;
+    }
+
+    public object AddUserData(ExpandoObject inputData)
+    {
+        var userData = new Users
+        {
+            account = "123",
+            password = "345"
+        };
+        var resultData = SystemHelper.ToExpandoObject(_userRepository.AddUserData(userData));
+        ReUserData(ref resultData);
+        return resultData;
     }
 
     /// <summary>
     /// 洗顯示資料
     /// </summary>
     /// <param name="userData"></param>
-    private void ReUserData(ref IDictionary<string, object> userData)
+    private void ReUserData(ref ExpandoObject? userData)
     {
-        dynamic cacheData = (ExpandoObject)userData;
+        if (userData == null)
+        {
+            return;
+        }
+
+        dynamic cacheData = userData;
         const string dateFormat = "yyyy-MM-d HH:mm";
 
         var createdAt = cacheData.createdAt ?? "";
         var updatedAt = cacheData.updatedAt ?? "";
-        
+
+        IDictionary<string, object> dictionaryData = cacheData;
+
         //移除不顯示的欄位
-        userData.Remove("password");
-        
+        dictionaryData.Remove("password");
+
         //更改日期格式
         cacheData.createdAt = createdAt.ToString(dateFormat);
         cacheData.updatedAt = updatedAt.ToString(dateFormat);

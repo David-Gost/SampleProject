@@ -1,5 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Dommel;
+using System;
+
 namespace SampleProject.Models.DB.User;
 
 /// <summary>
@@ -8,47 +11,63 @@ namespace SampleProject.Models.DB.User;
 [Table("USERS")] 
 public class Users 
 {
+
   [Key]
-  public int USER_ID { get; set;}
+  [Column("USER_ID")]
+  public int userId { get; set;}
 
   /// <summary>
   /// 帳號
   /// </summary>
-  public string ACCOUNT { get; set;}
+  [Column("ACCOUNT")]
+  public string account { get; set;}
 
   /// <summary>
   /// 使用者密碼
   /// </summary>
-  public string PASSWORD { get; set;}
+  [Column("PASSWORD")]
+  public string password { get; set;}
 
   /// <summary>
   /// 最後登入日期
   /// </summary>
-  public DateTime LAST_LOGIN { get; set;}
+  [Column("LAST_LOGIN")]
+  public DateTime lastLogin { get; set;}
 
   /// <summary>
   /// token
   /// </summary>
-  public string TOKEN { get; set;}
+  [Column("TOKEN")]
+  public string token { get; set;}
 
   /// <summary>
   /// token過期時間
   /// </summary>
-  public DateTime TOKEN_TIME { get; set;}
+  [Column("TOKEN_TIME")]
+  public DateTime tokenTime { get; set;}
 
   /// <summary>
   /// 備註
   /// </summary>
-  public string REMARK { get; set;}
+  [Column("REMARK")]
+  public string remark { get; set;}
 
   /// <summary>
   /// 資料建立日期
   /// </summary>
-  public DateTime CREATE_AT { get; set;}
+  [Column("CREATED_AT")]
+  public DateTime createdAt { get; set;}
 
   /// <summary>
   /// 資料更新日期
   /// </summary>
-  public DateTime UPDATE_AT { get; set;}
+  [Column("UPDATED_AT")]
+  public DateTime updatedAt { get; set;}
 
+  /// <summary>
+  /// 使用者資訊
+  /// </summary>
+  [ForeignKey(nameof(userId))]
+  [Ignore]
+  public UserInfos UserInfo { get; set; }
 }

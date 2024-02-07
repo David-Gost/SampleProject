@@ -1,21 +1,25 @@
+using System.Reflection;
 using Dommel;
 using Oracle.ManagedDataAccess.Client;
-using SampleProject.Services.DB.Common;
+using SampleProject.Base.Util.DB.DommelBuilder;
 using SampleProject.Services.DB.User;
-using TestApi.Services.Base.DB.Extension;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 //於此撰寫要注入的Service
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<CrontabTasksService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     //Swagger相關設定
+    
+    // 讀取 XML 檔案產生 API 說明
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
 });
 builder.Services.AddControllers();
 
@@ -37,29 +41,4 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -1,14 +1,10 @@
-using System.Collections;
 using System.Dynamic;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using IdentityServer4.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace SampleProject.Helpers;
 
+/// <summary>
+/// 系統函示（靜態類工具）
+/// </summary>
 public static class SystemHelper
 {
     /// <summary>
@@ -18,7 +14,8 @@ public static class SystemHelper
     /// <returns></returns>
     public static IEnumerable<IDictionary<string, object>> BaseReList(IEnumerable<object> fromList)
     {
-        return fromList.Select((fromData, index) => new { fromData, index }).Select(item => BaseReData((IDictionary<string, object>)item.fromData))
+        return fromList.Select((fromData, index) => new { fromData, index })
+            .Select(item => BaseReData((IDictionary<string, object>)item.fromData))
             .ToList();
     }
 
@@ -27,7 +24,7 @@ public static class SystemHelper
     /// </summary>
     /// <param name="fromData"></param>
     /// <returns></returns>
-    public static IDictionary<string, object> BaseReData(IDictionary<string, object> fromData)
+    public static IDictionary<string, object> BaseReData(IDictionary<string, object>? fromData)
     {
         if (fromData == null)
         {
@@ -60,7 +57,7 @@ public static class SystemHelper
 
         var words = str.Split('_');
         var wordsLength = words.Length;
-        
+
         if (wordsLength == 1)
         {
             //只有一個字詞，無條件轉小寫
@@ -85,5 +82,41 @@ public static class SystemHelper
         }
 
         return string.Join("", words);
+    }
+
+    /// <summary>
+    /// 任一物件轉換為ExpandoObject
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public static ExpandoObject ToExpandoObject(object? obj)
+    {
+        if (obj == null)
+        {
+            return new ExpandoObject();
+        }
+
+        var expandoObj = new ExpandoObject();
+        var propertyInfos = obj.GetType().GetProperties();
+
+        foreach (var propertyInfo in propertyInfos)
+        {
+            var columnName = propertyInfo.Name;
+
+            ((IDictionary<string, object>)expandoObj).Add(columnName, propertyInfo.GetValue(obj));
+        }
+
+        return expandoObj;
+    }
+    
+    /// <summary>
+    /// entity轉換成字典
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <returns></returns>
+    public static Dictionary<string, object?> EntityToDictionary<TEntity>(TEntity entity)
+    {
+        return typeof(TEntity).GetProperties().ToDictionary(property => property.Name, property => property.GetValue(entity, null));
     }
 }

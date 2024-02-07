@@ -9,10 +9,9 @@ namespace SampleProject.Models.Custom.RequestFrom.User;
 public class GetUserDataParam
 {
     /// <summary>
-    /// 帳號id索引
+    /// 帳號id索引 ex:122233
     /// </summary>
-    [DefaultValue("")]
-    public string userId { get; set; }
+    public int userId { get; set; }
     
     /// <summary>
     /// 帳號

@@ -1,21 +1,21 @@
+using System.Dynamic;
 using System.Linq.Expressions;
 using Dapper;
 using Dommel;
 using Microsoft.VisualBasic.CompilerServices;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Repositories;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Models.DB.User;
-using SampleProject.Repositories.Base;
 
-namespace SampleProject.Repositories.DB;
+
+namespace SampleProject.Repositories.DB.User;
 
 public class UserRepository : BaseDbRepository
 {
-    private readonly OracleConnection _connection;
-
     public UserRepository(IConfiguration configuration) : base(configuration)
     {
-        _connection = (OracleConnection?)OracleConnection("");
+        _dbConnection = (OracleConnection?)OracleConnection("");
     }
 
     /// <summary>
@@ -23,15 +23,30 @@ public class UserRepository : BaseDbRepository
     /// </summary>
     /// <param name="inputData"></param>
     /// <returns></returns>
-    public IDictionary<string, object> GetUserData(GetUserDataParam inputData)
+    public Users? GetUserData(GetUserDataParam inputData)
     {
-        var userId = inputData.userId ?? "";
+        var userId = inputData.userId;
         var account = inputData.account ?? "";
-        var sql = BaseFilterUserSql(inputData);
+        // var sql = BaseFilterUserSql(inputData);
 
-        var dataResult = _connection
-            .QueryFirstOrDefaultAsync(sql, new { filterUserId = userId, filterAccount = account }).Result;
-        return ((dataResult == null ? new object() : dataResult) as IDictionary<string, object>)!;
+        using (_dbConnection)
+        {
+            var dataResult = _dbConnection.GetAllAsync<Users, UserInfos, Users>(
+                    (user, userInfo) =>
+                    {
+                        if (userId > 0)
+                        {
+                            user.userId = userId;
+                        }
+
+                        user.UserInfo = userInfo;
+                        return user;
+                    }
+                )
+                .Result.FirstOrDefault();
+
+            return dataResult;
+        }
     }
 
     /// <summary>
@@ -41,13 +56,25 @@ public class UserRepository : BaseDbRepository
     /// <returns></returns>
     public IEnumerable<object> GetUserDatas(GetUserDataParam inputData)
     {
-        var userId = inputData.userId ?? "";
+        var userId = inputData.userId;
         var account = inputData.account ?? "";
         var sql = BaseFilterUserSql(inputData);
 
-        var resultData=_connection
+        var resultData = _dbConnection
             .QueryAsync(sql, new { filterUserId = userId, filterAccount = account }).Result;
         return resultData;
+    }
+
+    /// <summary>
+    /// 新增user資料
+    /// </summary>
+    /// <param name="userData"></param>
+    /// <returns></returns>
+    public Users? AddUserData(Users userData)
+    {
+        var insertId = InsertIntoOracle(userData);
+
+        return insertId != 0 ?  _dbConnection.GetAsync<Users>(insertId).Result : null;
     }
 
     /// <summary>
@@ -57,13 +84,14 @@ public class UserRepository : BaseDbRepository
     /// <returns></returns>
     private string BaseFilterUserSql(GetUserDataParam inputData)
     {
-        var userId = inputData.userId ?? "";
+        var userId = inputData.userId;
         var account = inputData.account ?? "";
 
-        var sql = @"SELECT * FROM USERS ";
-        if (!string.IsNullOrEmpty(userId))
+        var sql = @"SELECT USERS.*,USER_INFOS.TELEPHONE FROM USERS 
+    LEFT JOIN USER_INFOS ON USERS.USER_ID = USER_INFOS.USER_ID ";
+        if (userId > 0)
         {
-            sql += "WHERE USER_ID = :filterUserId ";
+            sql += "WHERE USERS.USER_ID = :filterUserId ";
         }
 
         if (!string.IsNullOrEmpty(account))
