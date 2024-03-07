@@ -21,6 +21,97 @@ public class BaseDbRepository : BaseDbConnection
     protected BaseDbRepository(IConfiguration configuration) : base(configuration)
     {
     }
+    
+    /// <summary>
+    /// 檢查db連線是否啟用
+    /// </summary>
+    /// <returns></returns>
+    protected bool CheckConnectOpen()
+    {
+        try
+        {
+            if (_dbConnection.State == ConnectionState.Closed)
+            {
+                _dbConnection.Open();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+
+        return _dbConnection.State == ConnectionState.Open;
+    }
+    
+     /// <summary>
+    /// 產生篩選條件資料
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="parameterVal"></param>
+    /// <param name="separator"></param>
+    /// <returns></returns>
+    protected IDictionary<string, string> createWhereParm(string condition, string parameterVal = "",
+        string separator = "AND")
+    {
+        var sqlBuilder = GetSqlBuilder();
+
+        return new Dictionary<string, string>
+        {
+            { "condition", condition },
+            { "parameterVal", !parameterVal.Equals("") ? sqlBuilder.PrefixParameter(parameterVal) : "" },
+            { "separator", separator }
+        };
+    }
+
+    /// <summary>
+    /// 條件語法轉換
+    /// </summary>
+    /// <param name="filterList"></param>
+    /// <param name="generateWhere">是否從where字串開始產生</param>
+    /// <returns></returns>
+    protected string FilterParamsToQuery(List<IDictionary<string, string>>? filterList, bool generateWhere = true)
+    {
+        var filterQuery = "";
+
+        if (filterList is not { Count: > 0 })
+        {
+            return filterQuery;
+        }
+
+        foreach (var dictionary in filterList)
+        {
+            var condition = dictionary["condition"];
+            var parameterVal = dictionary["parameterVal"];
+            var separator = dictionary["separator"];
+
+            if (filterQuery.Equals("") && generateWhere)
+            {
+                filterQuery = $" WHERE {condition} {parameterVal} ";
+            }
+            else
+            {
+                filterQuery += $" {separator} {condition} {parameterVal}";
+            }
+        }
+
+        return filterQuery;
+    }
+
+    /// <summary>
+    /// 產生group by 語法
+    /// </summary>
+    /// <param name="groupByList"></param>
+    /// <returns></returns>
+    protected string GroupByParamsToQuery(List<string> groupByList)
+    {
+        if (groupByList is not { Count: > 0 })
+        {
+            return "";
+        }
+
+        return " GROUP BY " + string.Join(" ,", groupByList);
+    }
 
     /// <summary>
     /// 使用Dapper的擴充套件Dommel撰寫的oracle專用新增資料語法
@@ -30,10 +121,14 @@ public class BaseDbRepository : BaseDbConnection
     /// <returns>新增成功回傳1，失敗回應0，有設定自動序列的鍵值時會回傳新增後的序列值</returns>
     protected int InsertIntoOracle<TEntity>(TEntity entity)
     {
-        _dbConnection.Open();
+        if (!CheckConnectOpen())
+        {
+
+            return 0;
+        }
         var returnData = 0;
         var dataType = typeof(TEntity);
-        var sqlBuilder = DommelMapper.GetSqlBuilder(_dbConnection);
+        var sqlBuilder = GetSqlBuilder();
 
         //表名稱
         var tableName = Resolvers.Table(dataType, sqlBuilder);
@@ -49,7 +144,7 @@ public class BaseDbRepository : BaseDbConnection
         var typeProperties = Resolvers.Properties(dataType)
             .Where(x => !x.IsGenerated)
             .Select(x => x.Property)
-            .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property));
+            .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property)).ToList();
 
         //表欄位
         var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false)).ToArray();
@@ -76,7 +171,6 @@ public class BaseDbRepository : BaseDbConnection
                 direction: ParameterDirection.Output);
         }
 
-        using var dbTransaction = _dbConnection.BeginTransaction();
         try
         {
             var paramDictionary = SystemHelper.EntityToDictionary(entity);
@@ -92,7 +186,6 @@ public class BaseDbRepository : BaseDbConnection
             
             //執行語法
             var sqlResult = _dbConnection.ExecuteScalarAsync(insertSql, orderParam);
-            dbTransaction.Commit();
             var resultStatus = sqlResult.IsCompletedSuccessfully;
 
             if (resultStatus)
@@ -103,10 +196,19 @@ public class BaseDbRepository : BaseDbConnection
         }
         catch (Exception e)
         {
-            dbTransaction.Rollback();
+            Console.WriteLine(e);
             throw;
         }
 
         return returnData;
+    }
+
+    /// <summary>
+    /// 取得SqlBuilder
+    /// </summary>
+    /// <returns></returns>
+    private ISqlBuilder GetSqlBuilder()
+    {
+        return DommelMapper.GetSqlBuilder(_dbConnection);
     }
 }

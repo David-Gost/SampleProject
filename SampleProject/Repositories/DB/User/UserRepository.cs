@@ -15,7 +15,7 @@ public class UserRepository : BaseDbRepository
 {
     public UserRepository(IConfiguration configuration) : base(configuration)
     {
-        _dbConnection = (OracleConnection?)OracleConnection("");
+        _dbConnection = ((OracleConnection?)OracleConnection())!;
     }
 
     /// <summary>

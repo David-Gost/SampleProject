@@ -19,7 +19,7 @@ public class BaseDbConnection
     /// </summary>
     /// <param name="dbConnectStr"></param>
     /// <returns></returns>
-    protected IDbConnection OracleConnection(string dbConnectStr)
+    protected IDbConnection OracleConnection(string dbConnectStr="")
     {
         if (dbConnectStr.Equals(""))
         {
@@ -34,7 +34,7 @@ public class BaseDbConnection
     /// </summary>
     /// <param name="dbConnectStr"></param>
     /// <returns></returns>
-    protected IDbConnection MySqlConnection(string dbConnectStr)
+    protected IDbConnection MySqlConnection(string dbConnectStr="")
     {
         if (dbConnectStr.Equals(""))
         {
