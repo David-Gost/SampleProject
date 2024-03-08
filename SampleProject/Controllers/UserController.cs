@@ -1,7 +1,8 @@
-
 using System.Dynamic;
 using Microsoft.AspNetCore.Mvc;
 using SampleProject.Base.Controllers;
+using SampleProject.Base.Models.File;
+using SampleProject.Helpers;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Services.DB.User;
 
@@ -58,7 +59,27 @@ public class UserController : BaseApiController
     {
         dynamic insertData = new ExpandoObject();
         insertData.account = "";
-        var resultData=_userService.AddUserData(insertData);
+        var resultData = _userService.AddUserData(insertData);
         return Task.FromResult(BackCall(resultData));
+    }
+
+    /// <summary>
+    /// 檔案上傳
+    /// </summary>
+    /// <param name="file"></param>
+    /// <returns></returns>
+    [HttpPost("UploadFile")]
+    public Task<ActionResult> UploadFile(IFormFile file)
+    {
+        var request = HttpContext.Request;
+        var domainName = request.Host.Value;
+        var scheme = request.Scheme;
+        
+        var fileOption = new UploadOptionModel
+        {
+            uploadPath = "image",
+            baseUrl = $"{scheme}://{domainName}"
+        };
+        return Task.FromResult(BackCall(FileHelper.BaseUploadFile(file,fileOption)!));
     }
 }

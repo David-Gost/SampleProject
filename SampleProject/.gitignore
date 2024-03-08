@@ -2,8 +2,10 @@
 /.git
 /.idea
 ./obj
-./wwwroot/Logs
+/wwwroot/
+!/wwwroot/index.html
 ./appsettings.LocalDevelopment.json
 /bin/
 /obj/
 *.DS_Store
+
