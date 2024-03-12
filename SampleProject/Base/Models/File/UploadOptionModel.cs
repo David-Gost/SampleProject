@@ -13,7 +13,7 @@ public class UploadOptionModel
     /// <summary>
     /// 檔案上傳路徑
     /// </summary>
-    public string uploadPath { get; set; }
+    public string uploadPath { get; set; } = "";
 
     /// <summary>
     /// 允許副檔名

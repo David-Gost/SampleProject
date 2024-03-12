@@ -69,17 +69,33 @@ public class UserController : BaseApiController
     /// <param name="file"></param>
     /// <returns></returns>
     [HttpPost("UploadFile")]
-    public Task<ActionResult> UploadFile(IFormFile file)
+    public Task<ActionResult> UploadFile(IFormFile? file)
     {
         var request = HttpContext.Request;
         var domainName = request.Host.Value;
         var scheme = request.Scheme;
-        
+
         var fileOption = new UploadOptionModel
         {
-            uploadPath = "image",
-            baseUrl = $"{scheme}://{domainName}"
+            uploadPath = "",
+            baseUrl = $"{scheme}://{domainName}",
         };
-        return Task.FromResult(BackCall(FileHelper.BaseUploadFile(file,fileOption)!));
+        return Task.FromResult(BackCall(FileHelper.UploadDocument(file, fileOption)!));
+    }
+
+    /// <summary>
+    /// 移動檔案
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <returns></returns>
+    [HttpPost("MoveFile")]
+    public Task<ActionResult> MoveFile(string filePath)
+    {
+        var request = HttpContext.Request;
+        var domainName = request.Host.Value;
+        var scheme = request.Scheme;
+        var baseUrl = $"{scheme}://{domainName}";
+        
+        return Task.FromResult(BackCall(FileHelper.MoveFile(filePath, "moveTo",baseUrl)!));
     }
 }

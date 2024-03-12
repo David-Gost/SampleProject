@@ -30,7 +30,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\image\" />
+      <_ContentIncludedByDefault Remove="wwwroot\temp\22c7d7cbbf6b34331b578d25bcb45494_Fx1OdilBO.csv" />
+      <_ContentIncludedByDefault Remove="wwwroot\temp\b407333ad965efaf1dfb1cbbf5706453_ZgpFfTx6d.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\temp\d41d8cd98f00b204e9800998ecf8427e_OtdMAQXp5.jpg" />
+      <_ContentIncludedByDefault Remove="wwwroot\temp\ec399ef29454a8582b1b9270228c331f_G6r1TB3r0.png" />
     </ItemGroup>
 
 </Project>

@@ -18,7 +18,7 @@ public class CheckUploadFileModel
     /// <summary>
     /// 檔案類型不允許上傳
     /// </summary>
-    public const int STATUS_FILE_TYPE_NOT_ALLOW = 2;
+    public const int STATUS_FILE_EXTENSION_NOT_ALLOW = 2;
     
     /// <summary>
     /// 檔案mime不允許上傳
