@@ -4,7 +4,6 @@ namespace SampleProject.Helpers;
 
 public static class DataHelper
 {
-    
     /// <summary>
     /// 產生亂數
     /// </summary>
@@ -20,20 +19,21 @@ public static class DataHelper
         {
             { "AZ", "QWERTYUIOPASDFGHJKLZXCVBNM" },
             { "az", "qwertyuiopasdfghjklzxcvbnm" },
-            { "9",  "0123456789" },
-            { "@",  "~!@#$%^&*+-_=" },
+            { "9", "0123456789" },
+            { "@", "~!@#$%^&*+-_=" },
             { "()", "(){}[]" }
         };
 
         var chars = new StringBuilder();
 
-        foreach(var elem in elements)
+        foreach (var elem in elements)
         {
             if (sets.TryGetValue(elem, out var value))
             {
                 chars.Append(value);
             }
         }
+
         var finalChars = chars.ToString();
         var stringChars = new char[length];
         var random = new Random();
@@ -45,5 +45,29 @@ public static class DataHelper
         }
 
         return new string(stringChars);
+    }
+
+    /// <summary>
+    /// Byte轉換成Hash字串
+    /// </summary>
+    /// <param name="byteArray"></param>
+    /// <param name="formatType">x2:輸出小寫（預設值），X2輸出大寫</param>
+    /// <returns></returns>
+    public static string Byte2Hash(byte[] byteArray, string formatType = "x2")
+    {
+        switch (byteArray.Length)
+        {
+            default:
+                return "";
+            case > 0:
+            {
+                var hashVal = BitConverter.ToString(byteArray).Replace("-", "");
+                return formatType switch
+                {
+                    "X2" => hashVal.ToUpperInvariant(),
+                    _ => hashVal.ToLowerInvariant()
+                };
+            }
+        }
     }
 }

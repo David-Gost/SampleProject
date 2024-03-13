@@ -11,27 +11,46 @@ public static class FileHelper
     private const string BASE_PATH = "wwwroot";
 
     /// <summary>
+    /// 清除目錄內X天前檔案，注意使用
+    /// </summary>
+    /// <param name="directoryName">路徑名</param>
+    /// <param name="dayNum">x天前所建立檔案</param>
+    public static void ClearDirectoryFile(string directoryName = "temp", int dayNum = 7)
+    {
+        var pathVal = Path.Combine(Directory.GetCurrentDirectory(), BASE_PATH, directoryName);
+        var directory = new DirectoryInfo(pathVal);
+        if (!directory.Exists)
+        {
+            return;
+        }
+
+        //搜尋符合條件的檔案清單
+        var files = directory.GetFiles().Where(file => file.LastWriteTime < DateTime.Now.AddDays(-dayNum)).ToList();
+        foreach (var file in files)
+        {
+            file.Delete();
+        }
+    }
+
+    /// <summary>
     /// 移動檔案
     /// </summary>
     /// <param name="fromFilePath">不包含跟目錄的相對路徑</param>
     /// <param name="toPathName">移動目標位置</param>
     /// <param name="baseUrl">網站baseUrl</param>
     /// <returns></returns>
-    public static FileInfoModel? MoveFile(string fromFilePath="", string toPathName="",string baseUrl="")
+    public static FileInfoModel? MoveFile(string fromFilePath = "", string toPathName = "", string baseUrl = "")
     {
-
-        var fromFileFullPath = Path.Combine(Directory.GetCurrentDirectory(),BASE_PATH, fromFilePath);
+        var fromFileFullPath = Path.Combine(Directory.GetCurrentDirectory(), BASE_PATH, fromFilePath);
 
         if (fromFilePath.Equals("") || toPathName.Equals(""))
         {
-
             return null;
         }
-        
+
         //檢查檔案是否存在
         if (File.Exists(fromFileFullPath))
         {
-            
             //檢查網址句尾是否有/，沒有就補上
             if (!baseUrl.Equals("") && !baseUrl.EndsWith($"/"))
             {
@@ -47,31 +66,29 @@ public static class FileHelper
             {
                 Directory.CreateDirectory(newFullPath);
             }
-            
+
             var fileHash = GenerateFileMD5(fromFileFullPath);
-            
-            var randomString = DataHelper.RandomString(9);
-            
+
             //檔案副檔名
             var extension = Path.GetExtension(fromFileFullPath);
 
             //新檔名
-            var newFileName = $"{fileHash}_{randomString}{extension}";
+            var newFileName = GenerateFileName(fileHash, extension);
 
             //檔案完整路徑
             var newFileFullPath = Path.Combine(newFullPath, newFileName);
-            
+
             var provider = new FileExtensionContentTypeProvider();
 
             // Try to get the MIME type of the file
             if (!provider.TryGetContentType(fromFileFullPath, out var contentType))
             {
-                contentType = "application/octet-stream"; // 默认 MIME 类型
+                contentType = "application/octet-stream"; // 預設MIME類型
             }
 
             //獨動檔案
-            File.Move(fromFileFullPath,newFileFullPath);
- 
+            File.Move(fromFileFullPath, newFileFullPath);
+
             if (!File.Exists(newFileFullPath))
             {
                 return null;
@@ -95,7 +112,7 @@ public static class FileHelper
             return null;
         }
     }
-    
+
     /// <summary>
     /// 文件檔上傳
     /// </summary>
@@ -116,8 +133,11 @@ public static class FileHelper
         //允許副檔名
         if (uploadOption.allowExtension is { Count: 0 })
         {
-            uploadOption.allowExtension = [".txt", ".json", ".pdf", ".doc",
-                ".xls", ".ppt", ".docx", ".xlsx", ".pptx"];
+            uploadOption.allowExtension =
+            [
+                ".txt", ".json", ".pdf", ".doc",
+                ".xls", ".ppt", ".docx", ".xlsx", ".pptx"
+            ];
         }
 
         //允許mime
@@ -125,12 +145,14 @@ public static class FileHelper
         {
             uploadOption.allowMimeType =
             [
-                "text/plain", "application/json", "application/pdf", "application/msword", "application/vnd.ms-excel", "application/vnd.ms-powerpoint",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "text/plain", "application/json", "application/pdf", "application/msword", "application/vnd.ms-excel",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "application/vnd.openxmlformats-officedocument.presentationml.presentation"
             ];
         }
-        
+
         return formFileData switch
         {
             List<IFormFile> fileList =>
@@ -328,17 +350,14 @@ public static class FileHelper
 
         try
         {
-            
             // //依照檔案內容生成md5
             var md5 = MD5.Create();
             var stream = formFile!.OpenReadStream();
-            var hash = md5.ComputeHash(stream);
-            var hashString= BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-            
-            var randomString = DataHelper.RandomString(9);
+            var hashData = md5.ComputeHash(stream);
+            var hashString = DataHelper.Byte2Hash(hashData);
 
             //新檔名
-            var newFileName = $"{hashString}_{randomString}" + Path.GetExtension(formFile.FileName);
+            var newFileName = GenerateFileName(hashString, Path.GetExtension(formFile.FileName));
 
             //檔案完整路徑
             var fileFullPath = Path.Combine(uploadPath, newFileName);
@@ -399,7 +418,7 @@ public static class FileHelper
 
             return checkUploadFileModel;
         }
-        
+
         //檢查檔案類型是否允許上傳
         if (allowExtension is { Count: > 0 })
         {
@@ -472,22 +491,34 @@ public static class FileHelper
     /// <returns></returns>
     private static string GenerateFileMD5(string filename)
     {
-        
-        using var md5 = MD5.Create();
         // 讀檔
         using var stream = File.OpenRead(filename);
         // 產生文件hash
-        var hash = md5.ComputeHash(stream);
-            
-        //Hash轉換為stringBuilder
-        var stringBuilder = new StringBuilder(hash.Length * 2);
-
-        foreach (var byteVal in hash)
-        {
-            stringBuilder.Append(byteVal.ToString("X2"));
-        }
+        var hashData = MD5.HashData(stream);
 
         //返回檔案Hash
-        return stringBuilder.ToString();
+        return DataHelper.Byte2Hash(hashData);
+    }
+
+    /// <summary>
+    /// 產生檔案名
+    /// </summary>
+    /// <param name="fileHashVal"></param>
+    /// <param name="fileExtension"></param>
+    /// <returns></returns>
+    private static string GenerateFileName(string fileHashVal, string fileExtension)
+    {
+        var randomString = DataHelper.RandomString(9);
+        var timestampSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
+        var cacheFileName = $"{fileHashVal}_{randomString}_{timestampSeconds}";
+
+        // 將輸入的字串轉換成byte陣列
+        var bytes = Encoding.UTF8.GetBytes(cacheFileName);
+
+        // 計算SHA256 hash值
+        var hashBytes = SHA256.HashData(bytes);
+
+        return $"{DataHelper.Byte2Hash(hashBytes)}{fileExtension}";
     }
 }
