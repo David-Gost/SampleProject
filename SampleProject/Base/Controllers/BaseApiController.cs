@@ -24,20 +24,20 @@ public class BaseApiController : ControllerBase
         //定義回傳資料物件
         dynamic responseBodyData = new ExpandoObject();
 
-        responseBodyData.HttpCode = httpCode;
+        responseBodyData.httpCode = httpCode;
 
         //dataCode不為空時多回應
         if (!dataCode.Equals(""))
         {
-            responseBodyData.DataCode = dataCode;
+            responseBodyData.dataCode = dataCode;
         }
 
         //無傳回應資料時產生空物件
         resultData ??= new ExpandoObject();
 
-        responseBodyData.Data = resultData;
+        responseBodyData.data = resultData;
 
-        responseBodyData.Message = message;
+        responseBodyData.message = message;
 
         return httpCode == 204 ? NoContent() : (ActionResult)StatusCode(httpCode, responseBodyData);
     }
