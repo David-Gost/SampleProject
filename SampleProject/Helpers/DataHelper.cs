@@ -1,4 +1,5 @@
 using System.Text;
+using Newtonsoft.Json;
 
 namespace SampleProject.Helpers;
 
@@ -68,6 +69,40 @@ public static class DataHelper
                     _ => hashVal.ToLowerInvariant()
                 };
             }
+        }
+    }
+    
+    /// <summary>
+    /// 檢查內容是否為Json
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static bool IsValidJson(string input)
+    {
+        input = input.Trim();
+        if ((input.StartsWith($"{{") && input.EndsWith($"}}")) || ( //For object
+                input.StartsWith($"[") && input.EndsWith($"]"))) //For array
+        {
+            try
+            {
+                var obj = Newtonsoft.Json.Linq.JToken.Parse(input);
+                return true;
+            }
+            catch (JsonReaderException jex)
+            {
+                //Exception in parsing json
+                Console.WriteLine(jex.Message);
+                return false;
+            }
+            catch (Exception ex) //some other exception
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+        else
+        {
+            return false;
         }
     }
 }
