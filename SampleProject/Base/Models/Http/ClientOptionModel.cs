@@ -26,4 +26,14 @@ public class ClientOptionModel
     /// BearerToken 數值
     /// </summary>
     public string bearerToken { get; set; } = "";
+
+    /// <summary>
+    /// 連線等待秒數
+    /// </summary>
+    public int timeoutSec { get; set; } = 20;
+
+    /// <summary>
+    /// 是否允許自動跳轉
+    /// </summary>
+    public bool autoRedirect { get; set; } = true;
 }

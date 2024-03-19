@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SampleProject.Base.Controllers;
 using SampleProject.Base.Models.File;
 using SampleProject.Base.Models.Http;
+using SampleProject.Base.Models.Http.Form;
 using SampleProject.Helpers;
 
 namespace SampleProject.Controllers;
@@ -53,14 +54,49 @@ public class TestController : BaseApiController
     {
         var clientOption = new ClientOptionModel
         {
-            requestApiUrl = "http://localhost:5100/api/Company/GetCompanyDatas",
+            requestApiUrl = "http://localhost:5209/FormApiTest",
             httpMethod = HttpMethod.Post,
             bearerToken =
                 "eyJhbGciOiJIUzI1NiJ9.W9mSdC0zsW4NlA8T6fvaE4uz4hgYcpVBSRv5T_lbMBapbZKChbvBemBxvtk4doUfv2ErleamidX7Ojz3cLiBvTxfRt7unA8y6UDeqJuboBx6YRgZU6zkGshiYa8s9fIb74RMtQcmVPfLor70w6irfqILKr8sFezo0lJCaxw8cUo.JvqoInwQdYYkuvP1TMtFgVIa32bbrgzWDzLK9yfPdL8",
             headerParams = new Dictionary<string, string> { { "a", "a_val" } }
         };
-        var jsonVal = "{\"id\": 0, \"companyId\": 0, \"companyName\": \"\"}";
 
-        return Task.FromResult(BackCall(HttpHelper.RawContentRequest(jsonVal, clientOption).Result!));
+        var fromFileFullPath1 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "moveTo/0B04474E3219ACD0F29E5DE0EEA2B997_2I4FIIpSP.jpg");
+        var fromFileFullPath2 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "moveTo/b627038af204d02e202039ea8be93d9f29b68b4b78110096df113054e264664f.doc");
+
+        var formDataList = new List<FormContentModel>
+        {
+            {new FormContentModel
+            {
+                dataKey = "k1",
+                dataVal = "val1"
+            }},
+            new FormContentModel
+            {
+                dataType = FormContentModel.DATA_TYPE_FILE,
+                dataKey = "K2",
+                dataVal = fromFileFullPath1
+            },
+            new FormContentModel
+            {
+                dataType = FormContentModel.DATA_TYPE_FILE,
+                dataKey = "K3",
+                dataVal = fromFileFullPath2
+            }
+        };
+
+        return Task.FromResult(BackCall(HttpHelper.FormRequest(formDataList, clientOption).Result!));
+    }
+
+    /// <summary>
+    /// 表單API測試
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("FormApiTest")]
+    public Task<ActionResult> FormApiTest([FromForm]IFormCollection data)
+    {
+        
+        return Task.FromResult(BackCall(data));
     }
 }
