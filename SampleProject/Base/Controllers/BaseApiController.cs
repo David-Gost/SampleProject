@@ -24,8 +24,6 @@ public class BaseApiController : ControllerBase
         //定義回傳資料物件
         dynamic responseBodyData = new ExpandoObject();
 
-        responseBodyData.httpCode = httpCode;
-
         //dataCode不為空時多回應
         if (!dataCode.Equals(""))
         {
@@ -35,7 +33,7 @@ public class BaseApiController : ControllerBase
         //無傳回應資料時產生空物件
         resultData ??= new ExpandoObject();
 
-        responseBodyData.data = resultData;
+        responseBodyData.result = resultData;
 
         responseBodyData.message = message;
 

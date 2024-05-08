@@ -1,4 +1,3 @@
-using System.Drawing.Imaging;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.StaticFiles;
@@ -6,9 +5,12 @@ using SampleProject.Base.Models.File;
 
 namespace SampleProject.Helpers;
 
+/// <summary>
+/// 檔案處理相關Helper
+/// </summary>
 public static class FileHelper
 {
-    private const string BASE_PATH = "wwwroot";
+    private const string BasePath = "wwwroot";
 
     /// <summary>
     /// 清除目錄內X天前檔案，注意使用
@@ -17,7 +19,7 @@ public static class FileHelper
     /// <param name="dayNum">x天前所建立檔案</param>
     public static void ClearDirectoryFile(string directoryName = "temp", int dayNum = 7)
     {
-        var pathVal = Path.Combine(Directory.GetCurrentDirectory(), BASE_PATH, directoryName);
+        var pathVal = Path.Combine(Directory.GetCurrentDirectory(), BasePath, directoryName);
         var directory = new DirectoryInfo(pathVal);
         if (!directory.Exists)
         {
@@ -41,7 +43,7 @@ public static class FileHelper
     /// <returns></returns>
     public static FileInfoModel? MoveFile(string fromFilePath = "", string toPathName = "", string baseUrl = "")
     {
-        var fromFileFullPath = Path.Combine(Directory.GetCurrentDirectory(), BASE_PATH, fromFilePath);
+        var fromFileFullPath = Path.Combine(Directory.GetCurrentDirectory(), BasePath, fromFilePath);
 
         if (fromFilePath.Equals("") || toPathName.Equals(""))
         {
@@ -58,7 +60,7 @@ public static class FileHelper
             }
 
             //檔案上傳位置
-            var newFilePath = $"{BASE_PATH}/{toPathName}";
+            var newFilePath = $"{BasePath}/{toPathName}";
             var newFullPath = Path.Combine(Directory.GetCurrentDirectory(), newFilePath);
 
             //檢查路徑是否存在，不存在則建立
@@ -340,7 +342,7 @@ public static class FileHelper
         }
 
         //檔案上傳位置
-        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"{BASE_PATH}/{pathName}");
+        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"{BasePath}/{pathName}");
 
         //檢查路徑是否存在，不存在則建立
         if (!Directory.Exists(uploadPath))
@@ -388,6 +390,25 @@ public static class FileHelper
         {
             Console.WriteLine(e);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// 檢查資料夾是否存在，不存在時會建立
+    /// </summary>
+    /// <param name="pathName"></param>
+    public static void CheckPath(string pathName)
+    {
+        if (string.IsNullOrEmpty(pathName))
+        {
+            return;
+        }
+        
+        var pathVal = Path.Combine(Directory.GetCurrentDirectory(), pathName);
+
+        if (!Directory.Exists(pathVal))
+        {
+            Directory.CreateDirectory(pathVal);
         }
     }
 

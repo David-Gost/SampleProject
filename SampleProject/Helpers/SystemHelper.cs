@@ -85,11 +85,11 @@ public static class SystemHelper
     }
 
     /// <summary>
-    /// 任一物件轉換為ExpandoObject
+    /// 任一物件轉換為字典
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static ExpandoObject ToExpandoObject(object? obj)
+    public static ExpandoObject AnyObjToDictionary(object? obj)
     {
         if (obj == null)
         {
@@ -103,12 +103,12 @@ public static class SystemHelper
         {
             var columnName = propertyInfo.Name;
 
-            ((IDictionary<string, object>)expandoObj).Add(columnName, propertyInfo.GetValue(obj));
+            ((IDictionary<string, object?>)expandoObj).Add(columnName, propertyInfo.GetValue(obj));
         }
 
         return expandoObj;
     }
-    
+
     /// <summary>
     /// entity轉換成字典
     /// </summary>
@@ -117,6 +117,7 @@ public static class SystemHelper
     /// <returns></returns>
     public static Dictionary<string, object?> EntityToDictionary<TEntity>(TEntity entity)
     {
-        return typeof(TEntity).GetProperties().ToDictionary(property => property.Name, property => property.GetValue(entity, null));
+        return typeof(TEntity).GetProperties()
+            .ToDictionary(property => property.Name, property => property.GetValue(entity, null));
     }
 }

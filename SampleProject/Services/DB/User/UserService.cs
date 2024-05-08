@@ -28,7 +28,7 @@ public class UserService : BaseDbService
     /// <returns></returns>
     public object GetUserData(GetUserDataParam inputData)
     {
-        var resultData = SystemHelper.ToExpandoObject(_userRepository.GetUserData(inputData));
+        var resultData = SystemHelper.AnyObjToDictionary(_userRepository.GetUserData(inputData));
 
         //輸出資料轉換
         ReUserData(ref resultData);
@@ -59,7 +59,7 @@ public class UserService : BaseDbService
             account = "123",
             password = "345"
         };
-        var resultData = SystemHelper.ToExpandoObject(_userRepository.AddUserData(userData));
+        var resultData = SystemHelper.AnyObjToDictionary(_userRepository.AddUserData(userData));
         ReUserData(ref resultData);
         return resultData;
     }
