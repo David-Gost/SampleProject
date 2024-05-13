@@ -1,5 +1,6 @@
 using System.Dynamic;
 using Microsoft.AspNetCore.Mvc;
+using SampleProject.Models.Custom.Response;
 
 namespace SampleProject.Base.Controllers;
 
@@ -18,25 +19,27 @@ public class BaseApiController : ControllerBase
     protected ActionResult BackCall(
         object resultData,
         int httpCode = 200,
+        string messageType = MessageType.SUCCESS,
         string message = "",
         string dataCode = "")
     {
         //定義回傳資料物件
-        dynamic responseBodyData = new ExpandoObject();
+        var apiResponse = new BaseApiResponse();
 
         //dataCode不為空時多回應
         if (!dataCode.Equals(""))
         {
-            responseBodyData.dataCode = dataCode;
+            apiResponse.dataCode = dataCode;
         }
 
         //無傳回應資料時產生空物件
         resultData ??= new ExpandoObject();
 
-        responseBodyData.result = resultData;
+        apiResponse.result = resultData;
 
-        responseBodyData.message = message;
+        apiResponse.messageType = messageType;
+        apiResponse.message = message;
 
-        return httpCode == 204 ? NoContent() : (ActionResult)StatusCode(httpCode, responseBodyData);
+        return httpCode == 204 ? NoContent() : (ActionResult)StatusCode(httpCode, apiResponse);
     }
 }

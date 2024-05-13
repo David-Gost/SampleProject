@@ -2,10 +2,13 @@ using System.Reflection;
 using Dommel;
 using ElmahCore;
 using ElmahCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Util.DB.DommelBuilder;
+using SampleProject.Base.Util.Filter;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
+using SampleProject.Middleware;
 using SampleProject.Services.DB.User;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,32 +29,41 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    //使用本身的model驗證
+    options.SuppressModelStateInvalidFilter = true;
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+//Elmah設定
 builder.Services.AddElmah<XmlFileErrorLog>(options =>
 {
     options.LogPath = "~/Logs";
     options.Path = "logs";
-    // options.Notifiers.Add(new NotificationFilter());
-    // options.Filters.Add(new CmsErrorLogFilter());
+    options.Notifiers.Add(new NotificationFilter());
+    options.Filters.Add(new CmsErrorLogFilter());
     options.LogRequestBody = true;
-    
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    //加入自訂的model檢查
+    options.Filters.Add<ModelValidationAttribute>();
+});
 
 //資料夾初始化
 var pathDatas = builder.Configuration.GetSection("FilePath").GetChildren();
 if (pathDatas.Any())
 {
-
     var basePath = builder.Configuration.GetValue<string>("FilePath:Base");
 
     //檢查base資料夾是否存在
     FileHelper.CheckPath(basePath!);
     foreach (var configurationSection in pathDatas)
     {
-
         var pathType = configurationSection.Key;
 
         if (!pathType.Equals("Base"))
@@ -61,17 +73,15 @@ if (pathDatas.Any())
             //依照設定建立目錄
             foreach (var pathData in childPathDatas)
             {
-                var pathInfo = pathData.GetChildren().ToDictionary(x=>x.Key);
+                var pathInfo = pathData.GetChildren().ToDictionary(x => x.Key);
                 var pathName = pathInfo["PathName"].Value;
 
                 if (!string.IsNullOrEmpty(pathName))
                 {
-                    FileHelper.CheckPath($"{basePath}/{pathName}"); 
+                    FileHelper.CheckPath($"{basePath}/{pathName}");
                 }
             }
         }
-
-
     }
 }
 
@@ -92,6 +102,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseElmah();
 app.UseStaticFiles();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ExceptionHandleMiddleware>();
 // app.UseAuthentication();
 // app.UseAuthorization();
 app.MapControllers();
