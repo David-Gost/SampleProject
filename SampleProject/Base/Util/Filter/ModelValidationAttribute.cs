@@ -47,7 +47,7 @@ public class ModelValidationAttribute : ActionFilterAttribute
         else
         {
             resultBody.message = errorMessages;
-            exceptionMessage = string.Join(Environment.NewLine, errorMessages.SelectMany(x => x.Key + " " + string.Join(Environment.NewLine, x.Value)));
+            exceptionMessage = string.Join(Environment.NewLine+"  ", errorMessages.Select(x => x.Key + "：" + string.Join(Environment.NewLine, x.Value)));
         }
 
         const int statusCode = (int)HttpStatusCode.BadRequest;

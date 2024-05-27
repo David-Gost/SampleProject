@@ -12,13 +12,13 @@ namespace SampleProject.Services.DB.User;
 /// <summary>
 /// 測試用
 /// </summary>
-public class UserService : BaseDbService
+public class UserService 
 {
     private readonly UserRepository _userRepository;
 
-    public UserService(IConfiguration configuration) : base(configuration)
+    public UserService(UserRepository userRepository)
     {
-        _userRepository = new UserRepository(_configuration);
+        _userRepository = userRepository;
     }
 
     /// <summary>

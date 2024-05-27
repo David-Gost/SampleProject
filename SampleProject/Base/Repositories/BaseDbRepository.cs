@@ -6,6 +6,7 @@ using Dapper;
 using Dapper.Oracle;
 using Dommel;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Util;
 using SampleProject.Helpers;
 
@@ -14,14 +15,34 @@ namespace SampleProject.Base.Repositories;
 /// <summary>
 /// DbRepository核心
 /// </summary>
-public class BaseDbRepository : BaseDbConnection
+public class BaseDbRepository
 {
     protected IDbConnection _dbConnection { set; get; }
+    private readonly IBaseDbConnection _baseDbConnection;
 
-    protected BaseDbRepository(IConfiguration configuration) : base(configuration)
+    public BaseDbRepository(IBaseDbConnection baseDbConnection)
     {
+        _baseDbConnection = baseDbConnection;
     }
-    
+
+    /// <summary>
+    /// 設定DB連線
+    /// </summary>
+    /// <param name="dbType">預設帶入 oracle</param>
+    /// <param name="dbConnectStr">db連線資料，預設帶入</param>
+    /// <exception cref="ArgumentException"></exception>
+    protected void SetDbConnection(DBType dbType = DBType.ORACLE, string dbConnectStr = "ConnectionStrings:DefaultConnection")
+    {
+        _dbConnection = dbType switch
+        {
+            DBType.ORACLE => _baseDbConnection.OracleConnection(dbConnectStr),
+            DBType.MYSQL => _baseDbConnection.MySqlConnection(dbConnectStr),
+            DBType.MSSQL => _baseDbConnection.SqlServerConnection(dbConnectStr),
+            DBType.POSTGRESQL => _baseDbConnection.PostgresqlConnection(dbConnectStr),
+            _ => throw new ArgumentException("Invalid database type"),
+        };
+    }
+
     /// <summary>
     /// 檢查db連線是否啟用
     /// </summary>
@@ -43,15 +64,15 @@ public class BaseDbRepository : BaseDbConnection
 
         return _dbConnection.State == ConnectionState.Open;
     }
-    
-     /// <summary>
+
+    /// <summary>
     /// 產生篩選條件資料
     /// </summary>
     /// <param name="condition"></param>
     /// <param name="parameterVal"></param>
     /// <param name="separator"></param>
     /// <returns></returns>
-    protected IDictionary<string, string> createWhereParm(string condition, string parameterVal = "",
+    protected IDictionary<string, string> createWhereParams(string condition, string parameterVal = "",
         string separator = "AND")
     {
         var sqlBuilder = GetSqlBuilder();
@@ -123,9 +144,9 @@ public class BaseDbRepository : BaseDbConnection
     {
         if (!CheckConnectOpen())
         {
-
             return 0;
         }
+
         var returnData = 0;
         var dataType = typeof(TEntity);
         var sqlBuilder = GetSqlBuilder();
@@ -160,7 +181,6 @@ public class BaseDbRepository : BaseDbConnection
         var propertyName = "";
         if (property != null)
         {
-            
             //有鍵值時新增輸出外健語法
             propertyName = property.Name;
             var propertyColumnName = Resolvers.Column(property, sqlBuilder, false);
@@ -183,7 +203,7 @@ public class BaseDbRepository : BaseDbConnection
                 //帶入數值
                 orderParam.Add(paramName, paramVal);
             }
-            
+
             //執行語法
             var sqlResult = _dbConnection.ExecuteScalarAsync(insertSql, orderParam);
             var resultStatus = sqlResult.IsCompletedSuccessfully;

@@ -1,9 +1,14 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Dommel;
 using ElmahCore;
 using ElmahCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Interface.DB.Repositories;
+using SampleProject.Base.Util;
 using SampleProject.Base.Util.DB.DommelBuilder;
 using SampleProject.Base.Util.Filter;
 using SampleProject.Helpers;
@@ -14,8 +19,26 @@ using SampleProject.Services.DB.User;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//於此撰寫要注入的Service
-builder.Services.AddScoped<UserService>();
+
+//於此撰寫手動注入
+builder.Services.AddScoped<IBaseDbConnection, BaseDbConnection>();
+
+//使用 AutoFuc注入符合命名空間的class
+var config = builder.Configuration;
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
+    {
+   
+        var fileTypeRegex = new Regex(@".(Services|Repositories)");
+        var assembly = Assembly.GetExecutingAssembly();
+        containerBuilder.RegisterAssemblyTypes(assembly)
+            .Where(fileType => fileType.Namespace != null &&
+                               !fileType.Namespace.Contains(".Base.") &&
+                               fileTypeRegex.IsMatch(fileType.Namespace))
+            .AsSelf()
+            .InstancePerDependency();
+        
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

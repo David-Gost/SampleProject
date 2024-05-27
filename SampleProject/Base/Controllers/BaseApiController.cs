@@ -16,7 +16,7 @@ public class BaseApiController : ControllerBase
     /// <param name="dataCode">資料代碼，依照狀況使用，預設可不填寫</param>
     /// 
     /// <returns></returns>
-    protected ActionResult BackCall(
+    protected IActionResult BackCall(
         object resultData,
         int httpCode = 200,
         string messageType = MessageType.SUCCESS,

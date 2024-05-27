@@ -30,7 +30,7 @@ public class UserController : BaseApiController
     /// <response code="200">查詢成功</response>
     /// <response code="404">查無資料</response>
     [HttpPost("GetUserData")]
-    public Task<ActionResult> GetUserData([FromBody] GetUserDataParam inputData)
+    public Task<IActionResult> GetUserData([FromBody] GetUserDataParam inputData)
     {
         var crontabTasksData = _userService.GetUserData(inputData);
 
@@ -43,7 +43,7 @@ public class UserController : BaseApiController
     /// <param name="inputData"></param>
     /// <returns></returns>
     [HttpPost("GetUserDatas")]
-    public Task<ActionResult> GetUserDatas([FromBody] GetUserDataParam inputData)
+    public Task<IActionResult> GetUserDatas([FromBody] GetUserDataParam inputData)
     {
         var crontabTasksDatas = _userService.GetUserDatas(inputData);
 

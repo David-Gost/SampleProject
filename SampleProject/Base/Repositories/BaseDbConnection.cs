@@ -1,15 +1,17 @@
 using System.Data;
 using System.Data.SqlClient;
 using MySqlConnector;
+using Npgsql;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Interface.DB.Repositories;
 
 namespace SampleProject.Base.Util;
 
-public class BaseDbConnection 
+public class BaseDbConnection : IBaseDbConnection 
 {
     private readonly IConfiguration _configuration;
     
-    protected BaseDbConnection(IConfiguration configuration)
+    public BaseDbConnection(IConfiguration configuration)
     {
         _configuration = configuration;
     }
@@ -19,7 +21,7 @@ public class BaseDbConnection
     /// </summary>
     /// <param name="dbConnectStr"></param>
     /// <returns></returns>
-    protected IDbConnection OracleConnection(string dbConnectStr="")
+    public IDbConnection OracleConnection(string dbConnectStr="")
     {
         if (dbConnectStr.Equals(""))
         {
@@ -34,7 +36,7 @@ public class BaseDbConnection
     /// </summary>
     /// <param name="dbConnectStr"></param>
     /// <returns></returns>
-    protected IDbConnection MySqlConnection(string dbConnectStr="")
+    public IDbConnection MySqlConnection(string dbConnectStr="")
     {
         if (dbConnectStr.Equals(""))
         {
@@ -50,7 +52,7 @@ public class BaseDbConnection
     /// </summary>
     /// <param name="dbConnectStr"></param>
     /// <returns></returns>
-    protected IDbConnection SqlServerConnection(string dbConnectStr)
+    public IDbConnection SqlServerConnection(string dbConnectStr)
     {
         
         if (dbConnectStr.Equals(""))
@@ -60,5 +62,21 @@ public class BaseDbConnection
         }
 
         return new SqlConnection(_configuration[dbConnectStr]);
+    }
+
+    /// <summary>
+    /// PostgreSQL 連線
+    /// </summary>
+    /// <param name="dbConnectStr"></param>
+    /// <returns></returns>
+    public IDbConnection PostgresqlConnection(string dbConnectStr = "")
+    {
+        if (dbConnectStr.Equals(""))
+        {
+
+            dbConnectStr = "ConnectionStrings:DefaultConnection";
+        }
+
+        return new NpgsqlConnection(_configuration[dbConnectStr]);
     }
 }

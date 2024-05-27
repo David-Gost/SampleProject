@@ -4,6 +4,7 @@ using Dapper;
 using Dommel;
 using Microsoft.VisualBasic.CompilerServices;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Models.DB.User;
@@ -13,9 +14,10 @@ namespace SampleProject.Repositories.DB.User;
 
 public class UserRepository : BaseDbRepository
 {
-    public UserRepository(IConfiguration configuration) : base(configuration)
+
+    public UserRepository(IBaseDbConnection baseDbConnection) : base(baseDbConnection)
     {
-        _dbConnection = ((OracleConnection?)OracleConnection())!;
+        SetDbConnection();
     }
 
     /// <summary>

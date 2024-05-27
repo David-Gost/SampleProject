@@ -4,18 +4,26 @@ using SampleProject.Base.Models.File;
 using SampleProject.Base.Models.Http;
 using SampleProject.Base.Models.Http.Form;
 using SampleProject.Helpers;
+using SampleProject.Services.Custom;
 
 namespace SampleProject.Controllers;
 
 public class TestController : BaseApiController
 {
+    private readonly CrontabTasksService _crontabTasksService;
+
+    public TestController(CrontabTasksService crontabTasksService)
+    {
+        _crontabTasksService = crontabTasksService;
+    }
+
     /// <summary>
     /// 檔案上傳
     /// </summary>
     /// <param name="file"></param>
     /// <returns></returns>
     [HttpPost("UploadFile")]
-    public Task<ActionResult> UploadFile(IFormFile? file)
+    public Task<IActionResult> UploadFile(IFormFile? file)
     {
         var request = HttpContext.Request;
         var domainName = request.Host.Value;
@@ -35,7 +43,7 @@ public class TestController : BaseApiController
     /// <param name="filePath"></param>
     /// <returns></returns>
     [HttpPost("MoveFile")]
-    public Task<ActionResult> MoveFile(string filePath)
+    public Task<IActionResult> MoveFile(string filePath)
     {
         var request = HttpContext.Request;
         var domainName = request.Host.Value;
@@ -50,7 +58,7 @@ public class TestController : BaseApiController
     /// </summary>
     /// <returns></returns>
     [HttpGet("CallApiTest")]
-    public Task<ActionResult> CallApiTest()
+    public Task<IActionResult> CallApiTest()
     {
         var clientOption = new ClientOptionModel
         {
@@ -61,16 +69,20 @@ public class TestController : BaseApiController
             headerParams = new Dictionary<string, string> { { "a", "a_val" } }
         };
 
-        var fromFileFullPath1 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "moveTo/0B04474E3219ACD0F29E5DE0EEA2B997_2I4FIIpSP.jpg");
-        var fromFileFullPath2 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "moveTo/b627038af204d02e202039ea8be93d9f29b68b4b78110096df113054e264664f.doc");
+        var fromFileFullPath1 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
+            "moveTo/0B04474E3219ACD0F29E5DE0EEA2B997_2I4FIIpSP.jpg");
+        var fromFileFullPath2 = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
+            "moveTo/b627038af204d02e202039ea8be93d9f29b68b4b78110096df113054e264664f.doc");
 
         var formDataList = new List<FormContentModel>
         {
-            {new FormContentModel
             {
-                dataKey = "k1",
-                dataVal = "val1"
-            }},
+                new FormContentModel
+                {
+                    dataKey = "k1",
+                    dataVal = "val1"
+                }
+            },
             new FormContentModel
             {
                 dataType = FormContentModel.DATA_TYPE_FILE,
@@ -85,7 +97,7 @@ public class TestController : BaseApiController
             }
         };
 
-        return Task.FromResult(BackCall(HttpHelper.FormRequest(formDataList, clientOption).Result!,200,"","4000"));
+        return Task.FromResult(BackCall(HttpHelper.FormRequest(formDataList, clientOption).Result!, 200, "", "4000"));
     }
 
     /// <summary>
@@ -94,9 +106,15 @@ public class TestController : BaseApiController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("FormApiTest")]
-    public Task<ActionResult> FormApiTest([FromForm]IFormCollection data)
+    public Task<IActionResult> FormApiTest([FromForm] IFormCollection data)
     {
-        
         return Task.FromResult(BackCall(data));
+    }
+
+    [HttpPost("DbTest")]
+    public Task<IActionResult> DbTest()
+    {
+        var resultData = _crontabTasksService.GetAllData();
+        return Task.FromResult(BackCall(resultData));
     }
 }
