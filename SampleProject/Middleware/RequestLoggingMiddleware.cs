@@ -17,6 +17,7 @@ public class RequestLoggingMiddleware
         context.Request.EnableBuffering();
 
         var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
+        
         context.Items["requestBody"] = requestBody;
 
         context.Request.Body.Position = 0;

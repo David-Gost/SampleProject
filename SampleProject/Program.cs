@@ -36,7 +36,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
                                !fileType.Namespace.Contains(".Base.") &&
                                fileTypeRegex.IsMatch(fileType.Namespace))
             .AsSelf()
-            .InstancePerDependency();
+            .InstancePerLifetimeScope();
         
     });
 
@@ -62,14 +62,23 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddRazorPages();
 
 //Elmah設定
-builder.Services.AddElmah<XmlFileErrorLog>(options =>
+var elmahStatus = config.GetValue<bool>("SystemOption:Elmah:status");
+var elmahUrlStatus = config.GetValue<bool>("SystemOption:Elmah:urlStatus");
+
+if (elmahStatus)
 {
-    options.LogPath = "~/Logs";
-    options.Path = "logs";
-    options.Notifiers.Add(new NotificationFilter());
-    options.Filters.Add(new CmsErrorLogFilter());
-    options.LogRequestBody = true;
-});
+    builder.Services.AddElmah<XmlFileErrorLog>(options =>
+    {
+        options.LogPath = "~/Logs";
+
+        if (elmahUrlStatus)
+        {
+            options.Path = "logs";
+        }
+        options.Notifiers.Add(new NotificationFilter());
+        options.Filters.Add(new CmsErrorLogFilter());
+    });
+}
 
 builder.Services.AddControllers(options =>
 {
@@ -123,7 +132,11 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowSpecificOrigin");
 }
 
-app.UseElmah();
+if (elmahStatus)
+{
+    app.UseElmah();  
+}
+
 app.UseStaticFiles();
 
 app.UseMiddleware<RequestLoggingMiddleware>();

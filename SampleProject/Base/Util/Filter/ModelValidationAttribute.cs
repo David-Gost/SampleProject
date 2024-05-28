@@ -40,23 +40,25 @@ public class ModelValidationAttribute : ActionFilterAttribute
         var exceptionMessage = "";
         if (checkHaveInputData)
         {
-            var messageList=errorMessages.SelectMany(x => x.Value).AsList();
+            var messageList = errorMessages.SelectMany(x => x.Value).AsList();
             resultBody.message = messageList;
             exceptionMessage = string.Join(Environment.NewLine, messageList);
         }
         else
         {
             resultBody.message = errorMessages;
-            exceptionMessage = string.Join(Environment.NewLine+"  ", errorMessages.Select(x => x.Key + "：" + string.Join(Environment.NewLine, x.Value)));
+            exceptionMessage = string.Join(Environment.NewLine + "  ",
+                errorMessages.Select(x => x.Key + "：" + string.Join(Environment.NewLine, x.Value)));
         }
 
         const int statusCode = (int)HttpStatusCode.BadRequest;
         //紀錄log
         var httpContext = context.HttpContext;
         var requestBody = httpContext.Items["requestBody"]?.ToString()!;
+
         _errorLog.LogAsync(new Error(
             new HttpRequestException("requestError", new HttpRequestException(exceptionMessage))
-            , httpContext, requestBody)
+            , httpContext)
         {
             StatusCode = statusCode
         });

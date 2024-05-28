@@ -3,7 +3,6 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using ElmahCore;
-using ElmahCore.Mvc.Logger;
 using FluentValidation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -45,6 +44,8 @@ public class ExceptionHandleMiddleware
     {
         var message = exception.Message;
         var guidNum = string.Concat("系統", Guid.NewGuid().ToString("D"));
+        
+        var httpStatusCode = (int)HttpStatusCode.InternalServerError;
 
         if (exception is OracleException)
         {
@@ -65,18 +66,26 @@ public class ExceptionHandleMiddleware
 
         if (exception.GetType() == typeof(ValidationException))
         {
-            context.Response.StatusCode = int.Parse(exception.Message);
+            
+            httpStatusCode=(int)HttpStatusCode.Unauthorized;
             var exceptionInnerException = exception.InnerException;
             result.message = exceptionInnerException?.Message ?? "";
         }
         else
         {
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            httpStatusCode=(int)HttpStatusCode.InternalServerError;
         }
 
+        context.Response.StatusCode = httpStatusCode;
+
         //紀錄log
+ 
         var requestBody = context.Items["requestBody"]?.ToString()!;
-        await _errorLog.LogAsync(new Error(exception, context, requestBody));
+        var errorData = new Error(exception, context)
+        {
+            StatusCode = httpStatusCode
+        };
+        await _errorLog.LogAsync(errorData);
 
         //輸出資料
         return Task.FromResult(context.Response.WriteAsJsonAsync(result));
