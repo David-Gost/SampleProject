@@ -6,5 +6,6 @@
 !/wwwroot/index.html
 /bin/
 /obj/
+/Hangfire/
 *.DS_Store
 /appsettings.LocalDevelopment.json

@@ -17,6 +17,7 @@ using SampleProject.Base.Util.DB.DommelBuilder;
 using SampleProject.Base.Util.Filter;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
+using SampleProject.Jobs;
 using SampleProject.Middleware;
 using SampleProject.Services.DB.User;
 using SQLite;
@@ -63,11 +64,11 @@ if (hangfireConfig != null)
     {
         builder.Services.AddHangfire(configuration =>
         {
-            configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings();
 
-            var hangfireStorageType = hangfireConfig.GetValue<string>("Driver", "");
+            var hangfireStorageType = hangfireConfig.GetValue<string>("Driver") ?? "";
             var hangfireStorageDictionary = hangfireConfig.GetSection("StorageInfo");
             var hangfireStorageInfo = hangfireStorageDictionary.GetSection(hangfireStorageType);
 
@@ -75,6 +76,8 @@ if (hangfireConfig != null)
             switch (hangfireStorageType)
             {
                 default:
+                    
+                    //有例外類型，強制不啟用
                     hangfireStatus = false;
                     break;
 
@@ -106,12 +109,15 @@ if (hangfireConfig != null)
 
                 case "Mysql":
 
+                    dbConnectStr = hangfireStorageInfo.GetValue<string>("Connection", "");
                     configuration.UseStorage(new MySqlStorage(
-                        hangfireStorageInfo.GetValue<string>("Connection",""),
+                        dbConnectStr,
                         new MySqlStorageOptions { TablesPrefix = "Hangfire" }));
                     break;
             }
         });
+
+        builder.AddJobExample();
     }
 }
 
@@ -257,6 +263,9 @@ if (hangfireStatus)
 {
     //Hangfire相關啟用設定
     app.UseHangfireDashboard("/hangfire");
+    
+    //以下加入定義的排程
+    app.SetJobExample();
 }
 
 #endregion
