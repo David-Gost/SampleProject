@@ -1,4 +1,4 @@
-namespace SampleProject.Base.Interface.DB.Repositories;
+namespace SampleProject.Base.Interface.DB;
 
 /// <summary>
 /// 資料庫類翔

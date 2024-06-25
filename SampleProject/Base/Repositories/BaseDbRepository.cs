@@ -6,6 +6,7 @@ using Dapper;
 using Dapper.Oracle;
 using Dommel;
 using Oracle.ManagedDataAccess.Client;
+using SampleProject.Base.Interface.DB;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Util;
 using SampleProject.Helpers;
@@ -31,7 +32,8 @@ public class BaseDbRepository
     /// <param name="dbType">預設帶入 oracle</param>
     /// <param name="dbConnectStr">db連線資料，預設帶入</param>
     /// <exception cref="ArgumentException"></exception>
-    protected void SetDbConnection(DBType dbType = DBType.ORACLE, string dbConnectStr = "ConnectionStrings:DefaultConnection")
+    protected void SetDbConnection(DBType dbType = DBType.ORACLE,
+        string dbConnectStr = "ConnectionStrings:DefaultConnection")
     {
         _dbConnection = dbType switch
         {
@@ -72,7 +74,7 @@ public class BaseDbRepository
     /// <param name="parameterVal"></param>
     /// <param name="separator"></param>
     /// <returns></returns>
-    protected IDictionary<string, string> createWhereParams(string condition, string parameterVal = "",
+    protected IDictionary<string, string> CreateWhereParams(string condition, string parameterVal = "",
         string separator = "AND")
     {
         var sqlBuilder = GetSqlBuilder();
@@ -132,6 +134,30 @@ public class BaseDbRepository
         }
 
         return " GROUP BY " + string.Join(" ,", groupByList);
+    }
+
+    /// <summary>
+    /// 產生order sql 語法
+    /// </summary>
+    /// <param name="orderParams"></param>
+    /// <returns></returns>
+    protected string OrderByParamsToQuery(IDictionary<string, string> orderParams)
+    {
+        if (orderParams is not { Count: > 0 })
+        {
+            return "";
+        }
+
+        var orderByList = new List<string?>();
+        for (var i = 0; i < orderParams.Keys.Count; i++)
+        {
+            
+            var propertyName = orderParams.Keys.ElementAt(i);
+            var orderVal = orderParams[propertyName];
+            orderByList.Add($"{propertyName} {GetOrderVal(orderVal)}");
+        }
+
+        return " ORDER BY " + string.Join(" ,", orderByList);
     }
 
     /// <summary>
@@ -230,5 +256,22 @@ public class BaseDbRepository
     private ISqlBuilder GetSqlBuilder()
     {
         return DommelMapper.GetSqlBuilder(_dbConnection);
+    }
+
+    /// <summary>
+    /// 轉換order by 字符
+    /// </summary>
+    /// <param name="orderVal"></param>
+    /// <returns></returns>
+    private string GetOrderVal(string? orderVal)
+    {
+        if (string.IsNullOrEmpty(orderVal))
+        {
+            return "ASC";
+        }
+
+        orderVal = orderVal.ToUpper();
+
+        return orderVal.Equals("ASC") ? "ASC" : "DESC";
     }
 }

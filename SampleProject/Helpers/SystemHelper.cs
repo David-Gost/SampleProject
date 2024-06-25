@@ -1,4 +1,5 @@
 using System.Dynamic;
+using Newtonsoft.Json;
 
 namespace SampleProject.Helpers;
 
@@ -96,17 +97,31 @@ public static class SystemHelper
             return new ExpandoObject();
         }
 
-        var expandoObj = new ExpandoObject();
+        var resultObj = new ExpandoObject();
         var propertyInfos = obj.GetType().GetProperties();
 
         foreach (var propertyInfo in propertyInfos)
         {
             var columnName = propertyInfo.Name;
 
-            ((IDictionary<string, object?>)expandoObj).Add(columnName, propertyInfo.GetValue(obj));
+            ((IDictionary<string, object?>)resultObj).Add(columnName, propertyInfo.GetValue(obj));
         }
 
-        return expandoObj;
+        return resultObj;
+    }
+    
+    /// <summary>
+    /// 任意物件轉換為ExpandoObject
+    /// </summary>
+    /// <param name="fromObj"></param>
+    /// <returns></returns>
+    public static ExpandoObject AnyObjToExpandoObject(object? fromObj)
+    {
+
+        var content=JsonConvert.SerializeObject(fromObj);
+        dynamic resultObj = JsonConvert.DeserializeObject<ExpandoObject>(content);
+
+        return resultObj;
     }
 
     /// <summary>

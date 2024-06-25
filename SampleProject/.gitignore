@@ -9,3 +9,4 @@
 /Hangfire/
 *.DS_Store
 /appsettings.LocalDevelopment.json
+Folder.DotSettings.user

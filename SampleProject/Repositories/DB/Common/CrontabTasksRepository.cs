@@ -1,4 +1,5 @@
 using Dapper;
+using SampleProject.Base.Interface.DB;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
 

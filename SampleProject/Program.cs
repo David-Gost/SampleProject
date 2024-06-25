@@ -116,14 +116,15 @@ if (hangfireConfig != null)
                     break;
             }
         });
-
-        builder.AddJobExample();
     }
 }
 
+if (hangfireStatus)
+{
+    builder.AddJobExample();
+    builder.Services.AddHangfireServer();
+}
 #endregion
-
-builder.Services.AddHangfireServer();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

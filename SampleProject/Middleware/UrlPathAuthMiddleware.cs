@@ -12,7 +12,18 @@ public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configur
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        var authInfo = configuration.GetSection("SystemOption:MiddlewareAuthConfig:AuthInfo");
+        var middlewareAuthConfig = configuration.GetSection("SystemOption:MiddlewareAuthConfig");
+
+        var isOn = middlewareAuthConfig.GetValue("IsOn", false);
+
+        if (!isOn)
+        {
+            
+            await next(context);
+            return;
+        }
+
+        var authInfo = middlewareAuthConfig.GetSection("AuthInfo");
 
         var headers = context.Request.Headers;
 
@@ -45,11 +56,11 @@ public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configur
                 username == validAccount &&
                 password == validPassword)
             {
-
                 //建立Client User
-                var claims = new[] {
+                var claims = new[]
+                {
                     new Claim(ClaimTypes.Name, username),
-                    new Claim(ClaimTypes.Role,"gust")
+                    new Claim(ClaimTypes.Role, "gust")
                 };
                 var identity = new ClaimsIdentity(claims, authScheme);
                 var principal = new ClaimsPrincipal(identity);
