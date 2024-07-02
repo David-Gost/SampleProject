@@ -9,13 +9,12 @@ namespace SampleProject.Jobs;
 /// <summary>
 /// 排程Job範例
 /// </summary>
-public class JobExample
+public class ExampleJob
 {
-    int _counter = 0;
+    private int _counter = 0;
 
-    public JobExample()
+    public ExampleJob()
     {
-
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class JobExample
     /// <summary>
     /// 先刪再設，避免錯過時間排程在伺服器啟動時執行
     /// </summary>
-    /// <param name="id">排程代號</param>
+    /// <param name="jobTag">排程代號</param>
     /// <param name="job">實際需執行工作</param>
     /// <param name="cron">排程參數，全*代表每分鐘皆執行，代號分別如下 分 小時 日期 月份 週</param>
     [Obsolete("Obsolete")]
-    public void SetSchTask(string id, Expression<Action> job, string cron)
+    public void SetSchTask(string jobTag, Expression<Action> job, string cron)
     {
-        RecurringJob.RemoveIfExists(id);
-        RecurringJob.AddOrUpdate(id, job, cron, TimeZoneInfo.Local);
+        RecurringJob.RemoveIfExists(jobTag);
+        RecurringJob.AddOrUpdate(jobTag, job, cron, TimeZoneInfo.Local);
     }
 
     public async Task TestJob()
@@ -50,15 +49,24 @@ public class JobExample
 /// </summary>
 public static class SchTaskWorkerExtensions
 {
-    public static WebApplicationBuilder AddJobExample(this WebApplicationBuilder builder)
+    /// <summary>
+    /// Service注入
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <returns></returns>
+    public static WebApplicationBuilder AddExampleJob(this WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton<JobExample>();
+        builder.Services.AddSingleton<ExampleJob>();
         return builder;
     }
 
-    public static void SetJobExample(this WebApplication app)
+    /// <summary>
+    /// 加入排程
+    /// </summary>
+    /// <param name="app"></param>
+    public static void SetExampleJob(this WebApplication app)
     {
-        var worker = app.Services.GetRequiredService<JobExample>();
+        var worker = app.Services.GetRequiredService<ExampleJob>();
         worker.SetSchTasks();
     }
 }

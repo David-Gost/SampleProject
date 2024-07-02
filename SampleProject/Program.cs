@@ -121,8 +121,14 @@ if (hangfireConfig != null)
 
 if (hangfireStatus)
 {
-    builder.AddJobExample();
     builder.Services.AddHangfireServer();
+    
+    #region 注入排程工作
+
+    // builder.AddExampleJob();
+    // builder.AddSendMailJob();
+
+    #endregion
 }
 #endregion
 
@@ -264,9 +270,13 @@ if (hangfireStatus)
 {
     //Hangfire相關啟用設定
     app.UseHangfireDashboard("/hangfire");
+
+    #region 加入排程
     
     //以下加入定義的排程
-    app.SetJobExample();
+    // app.SetExampleJob();
+    // app.SetSendMailJob();
+    #endregion
 }
 
 #endregion

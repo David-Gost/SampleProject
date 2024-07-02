@@ -12,6 +12,7 @@ public class BaseApiController : ControllerBase
     /// </summary>
     /// <param name="resultData">資料內容</param>
     /// <param name="httpCode">httpCode</param>
+    /// <param name="messageType"></param>
     /// <param name="message">訊息</param>
     /// <param name="dataCode">資料代碼，依照狀況使用，預設可不填寫</param>
     /// 
@@ -40,6 +41,6 @@ public class BaseApiController : ControllerBase
         apiResponse.messageType = messageType;
         apiResponse.message = message;
 
-        return httpCode == 204 ? NoContent() : (ActionResult)StatusCode(httpCode, apiResponse);
+        return httpCode == 204 ? NoContent() : StatusCode(httpCode, apiResponse);
     }
 }

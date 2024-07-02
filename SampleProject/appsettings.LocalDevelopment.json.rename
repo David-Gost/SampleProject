@@ -61,5 +61,20 @@
         "Remark": "系統Log"
       }
     ]
-  }
+  },
+  "SmtpInfo": {
+    "Setting": {
+      "Host": "",
+      "Port": "",
+      "EnableSsl": true,
+      "Username": "",
+      "Password": "",
+      "Remark": "smtp設定資料"
+    },
+    "From": {
+      "Address": "",
+      "Name": "",
+      "Remark": "寄件者資料，可設定寄件地址＆顯示名稱"
+    }
+  }  
 }

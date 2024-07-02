@@ -66,6 +66,22 @@ public class BaseDbRepository
 
         return _dbConnection.State == ConnectionState.Open;
     }
+    
+    /// <summary>
+    /// 關閉db連線
+    /// </summary>
+    protected void DisposeConnect()
+    {
+        try
+        {
+
+            _dbConnection.Dispose();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
 
     /// <summary>
     /// 產生篩選條件資料
@@ -157,7 +173,7 @@ public class BaseDbRepository
             orderByList.Add($"{propertyName} {GetOrderVal(orderVal)}");
         }
 
-        return " ORDER BY " + string.Join(" ,", orderByList);
+        return $" ORDER BY {string.Join(" ,", orderByList)}";
     }
 
     /// <summary>
