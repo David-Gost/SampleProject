@@ -5,7 +5,7 @@ using Dapper;
 using ElmahCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using SampleProject.Models.Custom.Response;
+using SampleProject.Base.Models.Response;
 
 namespace SampleProject.Base.Util.Filter;
 
@@ -32,7 +32,6 @@ public class ModelValidationAttribute : ActionFilterAttribute
 
         var resultBody = new BaseApiResponse()
         {
-            dataCode = "0",
             messageType = MessageType.REQUEST_ERROR
         };
 

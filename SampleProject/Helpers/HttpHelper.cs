@@ -40,7 +40,7 @@ public static class HttpHelper
         {
             // 建立一個 HttpRequestMessage
             using var request = InitRequestMessage(clientOption);
-            request.Content =  InitFormContent(formDataList);
+            request.Content = InitFormContent(formDataList);
 
             // 發送請求
             var response = await client.SendAsync(request);
@@ -161,6 +161,14 @@ public static class HttpHelper
     /// <param name="headerParams"></param>
     private static void RequestAddHeader(ref HttpRequestMessage request, Dictionary<string, string> headerParams)
     {
+
+        switch (headerParams)
+        {
+            case null:
+            case { Keys.Count: > 0 }:
+                return;
+        }
+
         foreach (var headerKey in headerParams.Keys)
         {
             var headerVal = headerParams[headerKey];
@@ -265,7 +273,7 @@ public static class HttpHelper
                         var fileStream = new FileStream(dataVal, FileMode.Open);
 
                         var fileContent = new StreamContent(fileStream);
-                        
+
                         var provider = new FileExtensionContentTypeProvider();
 
                         // Try to get the MIME type of the file
@@ -273,7 +281,7 @@ public static class HttpHelper
                         {
                             contentType = "application/octet-stream"; // 預設MIME類型
                         }
-                        
+
                         fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
                         dataFormContent.Add(fileContent, formContent.dataKey, Path.GetFileName(dataVal));

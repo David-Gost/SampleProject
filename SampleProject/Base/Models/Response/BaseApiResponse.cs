@@ -1,14 +1,10 @@
-namespace SampleProject.Models.Custom.Response;
+namespace SampleProject.Base.Models.Response;
 
 /// <summary>
 /// 基本API回應格式
 /// </summary>
 public class BaseApiResponse
 {
-    /// <summary>
-    /// 資料代碼
-    /// </summary>
-    public string dataCode { get; set; }
     
     /// <summary>
     /// 訊息類型

@@ -1,4 +1,4 @@
-namespace SampleProject.Models.Custom.Response;
+namespace SampleProject.Base.Models.Response;
 
 public class MessageType
 {

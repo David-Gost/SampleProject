@@ -1,6 +1,6 @@
 using System.Dynamic;
 using Microsoft.AspNetCore.Mvc;
-using SampleProject.Models.Custom.Response;
+using SampleProject.Base.Models.Response;
 
 namespace SampleProject.Base.Controllers;
 
@@ -25,10 +25,10 @@ public class BaseApiController : ControllerBase
         string dataCode = "")
     {
         //定義回傳資料物件
-        var apiResponse = new BaseApiResponse();
+        dynamic apiResponse = new BaseApiResponse();
 
         //dataCode不為空時多回應
-        if (!dataCode.Equals(""))
+        if (string.IsNullOrEmpty(dataCode))
         {
             apiResponse.dataCode = dataCode;
         }

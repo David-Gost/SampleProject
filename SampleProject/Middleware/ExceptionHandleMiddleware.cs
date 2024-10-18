@@ -7,7 +7,7 @@ using FluentValidation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Oracle.ManagedDataAccess.Client;
-using SampleProject.Models.Custom.Response;
+using SampleProject.Base.Models.Response;
 
 namespace SampleProject.Middleware;
 
@@ -61,7 +61,7 @@ public class ExceptionHandleMiddleware
 
         var result = new BaseApiResponse()
         {
-            dataCode = "0", messageType = MessageType.SYSTEM_ERROR, message = message
+             messageType = MessageType.SYSTEM_ERROR, message = message
         };
 
         if (exception.GetType() == typeof(ValidationException))
