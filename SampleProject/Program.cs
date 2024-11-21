@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting.Internal;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB.Repositories;
-using SampleProject.Base.Util;
+using SampleProject.Base.Repositories;
 using SampleProject.Base.Util.DB.DommelBuilder;
 using SampleProject.Base.Util.Filter;
 using SampleProject.Helpers;

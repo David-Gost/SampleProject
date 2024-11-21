@@ -7,10 +7,10 @@ namespace SampleProject.Repositories.DB.Common;
 
 public class CrontabTasksRepository:BaseDbRepository
 {
-    public CrontabTasksRepository(IBaseDbConnection baseDbConnection) : base(baseDbConnection)
+    public CrontabTasksRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection) : base(configuration, baseDbConnection)
     {
         
-        SetDbConnection(DBType.MYSQL,"ConnectionStrings:MariadbConnection");
+        SetDbConnection();
     }
 
 

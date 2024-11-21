@@ -5,7 +5,7 @@ using Npgsql;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB.Repositories;
 
-namespace SampleProject.Base.Util;
+namespace SampleProject.Base.Repositories;
 
 public class BaseDbConnection : IBaseDbConnection 
 {
@@ -26,9 +26,9 @@ public class BaseDbConnection : IBaseDbConnection
         if (dbConnectStr.Equals(""))
         {
 
-            dbConnectStr = "ConnectionStrings:DefaultConnection";
+            dbConnectStr = GetDefaultConnectionString();
         }
-        return new OracleConnection(_configuration[dbConnectStr]);
+        return new OracleConnection(dbConnectStr);
     }
 
     /// <summary>
@@ -41,10 +41,10 @@ public class BaseDbConnection : IBaseDbConnection
         if (dbConnectStr.Equals(""))
         {
 
-            dbConnectStr = "ConnectionStrings:DefaultConnection";
+            dbConnectStr = GetDefaultConnectionString();
         }
         
-        return new MySqlConnection(_configuration[dbConnectStr]);
+        return new MySqlConnection(dbConnectStr);
     }
 
     /// <summary>
@@ -58,10 +58,10 @@ public class BaseDbConnection : IBaseDbConnection
         if (dbConnectStr.Equals(""))
         {
 
-            dbConnectStr = "ConnectionStrings:DefaultConnection";
+            dbConnectStr = GetDefaultConnectionString();
         }
 
-        return new SqlConnection(_configuration[dbConnectStr]);
+        return new SqlConnection(dbConnectStr);
     }
 
     /// <summary>
@@ -74,9 +74,19 @@ public class BaseDbConnection : IBaseDbConnection
         if (dbConnectStr.Equals(""))
         {
 
-            dbConnectStr = "ConnectionStrings:DefaultConnection";
+            dbConnectStr = GetDefaultConnectionString();
         }
 
-        return new NpgsqlConnection(_configuration[dbConnectStr]);
+        return new NpgsqlConnection(dbConnectStr);
+    }
+
+    /// <summary>
+    /// 取得預設連線字串
+    /// </summary>
+    /// <returns></returns>
+    private string GetDefaultConnectionString()
+    {
+        var dbOption=_configuration.GetSection("DBConnection").GetSection("Default");
+        return dbOption.GetValue<string>("ConnectionString","")!;
     }
 }

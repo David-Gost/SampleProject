@@ -11,9 +11,9 @@ namespace SampleProject.Repositories.DB.Common;
 
 public class TempMailRepository : BaseDbRepository
 {
-    public TempMailRepository(IBaseDbConnection baseDbConnection) : base(baseDbConnection)
+    public TempMailRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection) : base(configuration, baseDbConnection)
     {
-        SetDbConnection(DBType.POSTGRESQL, "ConnectionStrings:PostgresqlConnection");
+        SetDbConnection();
         DommelJsonMapper.AddJson(new DommelJsonOptions
         {
             EntityAssemblies = [typeof(TempMailModel).Assembly],

@@ -1,14 +1,9 @@
 using System.Data;
-using System.Dynamic;
-using System.Text;
-using System.Text.Json;
 using Dapper;
 using Dapper.Oracle;
 using Dommel;
-using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB;
 using SampleProject.Base.Interface.DB.Repositories;
-using SampleProject.Base.Util;
 using SampleProject.Helpers;
 
 namespace SampleProject.Base.Repositories;
@@ -20,21 +15,34 @@ public class BaseDbRepository
 {
     protected IDbConnection _dbConnection { set; get; }
     private readonly IBaseDbConnection _baseDbConnection;
+    private readonly IConfiguration _configuration;
 
-    public BaseDbRepository(IBaseDbConnection baseDbConnection)
+    public BaseDbRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection)
     {
+        _configuration = configuration;
         _baseDbConnection = baseDbConnection;
     }
 
     /// <summary>
     /// 設定DB連線
     /// </summary>
-    /// <param name="dbType">預設帶入 oracle</param>
-    /// <param name="dbConnectStr">db連線資料，預設帶入</param>
+    /// <param name="dbConnectOption">db連線資料，預設帶入Default</param>
     /// <exception cref="ArgumentException"></exception>
-    protected void SetDbConnection(DBType dbType = DBType.ORACLE,
-        string dbConnectStr = "ConnectionStrings:DefaultConnection")
+    protected void SetDbConnection(
+        string dbConnectOption = "Default")
     {
+        var dbOption = _configuration.GetSection("DBConnection").GetSection(dbConnectOption);
+        var dbConnectType = dbOption.GetValue<string>("DBType", "")!.ToUpper();
+        var dbConnectStr = dbOption.GetValue<string>("ConnectionString", "")!;
+        var dbType = dbConnectType switch
+        {
+            "ORACLE" => DBType.ORACLE,
+            "MYSQL" => DBType.MYSQL,
+            "MSSQL" => DBType.MSSQL,
+            "POSTGRESQL" => DBType.POSTGRESQL,
+            _ => throw new ArgumentException("Invalid database type"),
+        };
+
         _dbConnection = dbType switch
         {
             DBType.ORACLE => _baseDbConnection.OracleConnection(dbConnectStr),
@@ -66,7 +74,7 @@ public class BaseDbRepository
 
         return _dbConnection.State == ConnectionState.Open;
     }
-    
+
     /// <summary>
     /// 關閉db連線
     /// </summary>
@@ -74,7 +82,6 @@ public class BaseDbRepository
     {
         try
         {
-
             _dbConnection.Dispose();
         }
         catch (Exception e)
@@ -167,7 +174,6 @@ public class BaseDbRepository
         var orderByList = new List<string?>();
         for (var i = 0; i < orderParams.Keys.Count; i++)
         {
-            
             var propertyName = orderParams.Keys.ElementAt(i);
             var orderVal = orderParams[propertyName];
             orderByList.Add($"{propertyName} {GetOrderVal(orderVal)}");

@@ -15,9 +15,9 @@ namespace SampleProject.Repositories.DB.User;
 public class UserRepository : BaseDbRepository
 {
 
-    public UserRepository(IBaseDbConnection baseDbConnection) : base(baseDbConnection)
+    public UserRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection) : base(configuration, baseDbConnection)
     {
-        SetDbConnection();
+        SetDbConnection("CLOUD_POSTGRESQL");
     }
 
     /// <summary>

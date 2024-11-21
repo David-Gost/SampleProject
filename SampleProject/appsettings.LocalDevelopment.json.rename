@@ -43,9 +43,17 @@
       }
     }
   },
-  "ConnectionStrings": {
-    "DefaultConnection": "User Id=admin;Password=admin;Data Source=localhost:1521/ORCLCDB;",
-    "MariadbConnection": "Server=localhost;Uid=root;Pwd=root;Port=3306;Database=api_test;Allow User Variables=True"
+  "DBConnection": {
+    "Default": {
+      "DBType": "POSTGRESQL",
+      "ConnectionString": "Host=localhost;Port=5432;Username=root;Password=root;Database=postgres;",
+      "Remark": "POSTGRESQL"
+    },
+    "Sample": {
+      "DBType": "MYSQL",
+      "ConnectionString": "",
+      "Remark": "可自訂連連資訊，Type內容可為ORACLE、MYSQL、MSSQL、POSTGRESQL"
+    }
   },
   "FilePath": {
     "Base": "wwwroot",
