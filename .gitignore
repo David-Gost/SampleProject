@@ -6,3 +6,4 @@
 ./wwwroot/Logs
 ./appsettings.LocalDevelopment.json
 *.DS_Store
+*.sln.DotSettings.user
