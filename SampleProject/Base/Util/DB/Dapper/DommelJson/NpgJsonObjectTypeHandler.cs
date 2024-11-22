@@ -2,7 +2,7 @@ using System.Data;
 using Dapper;
 using Npgsql;
 
-namespace SampleProject.Base.Util.DB.DommelJson;
+namespace SampleProject.Base.Util.DB.Dapper.DommelJson;
 
 /// <summary>
 /// postgresqlJson欄位處理

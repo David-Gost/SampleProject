@@ -13,11 +13,11 @@
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="Dapper" Version="2.1.35" />
         <PackageReference Include="Dapper.Oracle" Version="2.0.3" />
-        <PackageReference Include="Dommel" Version="3.3.3" />
-        <PackageReference Include="Dommel.Json" Version="3.3.3" />
+        <PackageReference Include="Dommel" Version="3.3.4" />
+        <PackageReference Include="Dommel.Json" Version="3.3.4" />
         <PackageReference Include="ElmahCore" Version="2.1.2" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-        <PackageReference Include="Hangfire" Version="1.8.14" />
+        <PackageReference Include="Hangfire" Version="1.8.15" />
         <PackageReference Include="Hangfire.Console" Version="1.4.3" />
         <PackageReference Include="Hangfire.Dashboard.Management.v2" Version="2.3.2" />
         <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.1" />
@@ -25,10 +25,19 @@
         <PackageReference Include="Hangfire.Storage.SQLite" Version="0.4.2" />
         <PackageReference Include="IdentityServer4" Version="4.1.2" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0"/>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.6" />
-        <PackageReference Include="MySqlConnector" Version="2.3.7" />
-        <PackageReference Include="Npgsql" Version="8.0.4" />
-        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.130" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+        <PackageReference Include="MySqlConnector" Version="2.4.0" />
+        <PackageReference Include="Npgsql" Version="9.0.1" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.1" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="9.0.1" />
+        <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.60" />
+        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
         <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
         <PackageReference Include="System.Linq" Version="4.3.0" />
@@ -43,6 +52,14 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\logs\error-2024-11-08082745Z-c9b6fb42-8468-4211-ac4c-42e11e025fd0.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\logs\error-2024-11-08083839Z-ef1fc3da-bd94-4d27-9ca5-0386dc983966.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\logs\error-2024-11-08084102Z-3b9a00ed-68c4-440e-9636-bb0a2126f556.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\logs\error-2024-11-08084148Z-b61cd812-8c72-43cb-b9ba-01a1ec7617d5.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\logs\error-2024-11-21090504Z-a3da7770-b5ad-4f99-a33c-054cf47eeec2.xml" />
     </ItemGroup>
 
 </Project>

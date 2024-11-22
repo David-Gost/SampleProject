@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SampleProject.Base.Controllers;
 using SampleProject.Helpers;
@@ -30,7 +31,7 @@ public class TempController : BaseApiController
 
         var orderParams = new Dictionary<string, string>
         {
-            {"create_at", "ASC"},
+            {"createdAt", "ASC"},
         };
         var dataList =  await Task.Run(() => _tempMailService.GetDatas(filterParams, orderParams));
         
@@ -56,7 +57,7 @@ public class TempController : BaseApiController
         
         var tempMailModel = new TempMailModel
         {
-            mailData = obj,
+            mailData = JsonDocument.Parse(JsonSerializer.Serialize(obj)),
         };
         
         var result = await Task.Run(() => _tempMailService.InsertData(tempMailModel));

@@ -2,9 +2,14 @@ using System.Data;
 using Dapper;
 using Dapper.Oracle;
 using Dommel;
+using Microsoft.EntityFrameworkCore;
 using SampleProject.Base.Interface.DB;
 using SampleProject.Base.Interface.DB.Repositories;
+using SampleProject.Base.Models.DB;
+using SampleProject.Base.Util.DB.Dapper;
+using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Helpers;
+using SampleProject.Util;
 
 namespace SampleProject.Base.Repositories;
 
@@ -13,44 +18,42 @@ namespace SampleProject.Base.Repositories;
 /// </summary>
 public class BaseDbRepository
 {
-    protected IDbConnection _dbConnection { set; get; }
-    private readonly IBaseDbConnection _baseDbConnection;
-    private readonly IConfiguration _configuration;
+    /// <summary>
+    /// dapper 連接器
+    /// </summary>
+    protected IDbConnection _dapperDbConnection { set; get; }
 
-    public BaseDbRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection)
+    protected ApplicationDbContext _efDbConnection { set; get; }
+
+    private readonly DapperContextManager _dapperContextManager;
+    private readonly DbContextManager _dbContextManager;
+
+    public BaseDbRepository(DapperContextManager dapperContextManager,
+        DbContextManager dbContextManager,
+        IDbConnection dapperDbConnection,
+        ApplicationDbContext efDbConnection)
     {
-        _configuration = configuration;
-        _baseDbConnection = baseDbConnection;
+        _dapperContextManager = dapperContextManager;
+        _dbContextManager = dbContextManager;
+        _dapperDbConnection = dapperDbConnection;
+        _efDbConnection = efDbConnection;
     }
 
     /// <summary>
-    /// 設定DB連線
+    /// 設定DB連線，用於
     /// </summary>
     /// <param name="dbConnectOption">db連線資料，預設帶入Default</param>
     /// <exception cref="ArgumentException"></exception>
     protected void SetDbConnection(
         string dbConnectOption = "Default")
     {
-        var dbOption = _configuration.GetSection("DBConnection").GetSection(dbConnectOption);
-        var dbConnectType = dbOption.GetValue<string>("DBType", "")!.ToUpper();
-        var dbConnectStr = dbOption.GetValue<string>("ConnectionString", "")!;
-        var dbType = dbConnectType switch
+        if (string.IsNullOrEmpty(dbConnectOption))
         {
-            "ORACLE" => DBType.ORACLE,
-            "MYSQL" => DBType.MYSQL,
-            "MSSQL" => DBType.MSSQL,
-            "POSTGRESQL" => DBType.POSTGRESQL,
-            _ => throw new ArgumentException("Invalid database type"),
-        };
+            throw new ArgumentException("Invalid database connection option");
+        }
 
-        _dbConnection = dbType switch
-        {
-            DBType.ORACLE => _baseDbConnection.OracleConnection(dbConnectStr),
-            DBType.MYSQL => _baseDbConnection.MySqlConnection(dbConnectStr),
-            DBType.MSSQL => _baseDbConnection.SqlServerConnection(dbConnectStr),
-            DBType.POSTGRESQL => _baseDbConnection.PostgresqlConnection(dbConnectStr),
-            _ => throw new ArgumentException("Invalid database type"),
-        };
+        _dapperDbConnection = _dapperContextManager.CreateDbConnection(dbConnectOption);
+        _efDbConnection = _dbContextManager.CreateDbContext(dbConnectOption);
     }
 
     /// <summary>
@@ -61,9 +64,9 @@ public class BaseDbRepository
     {
         try
         {
-            if (_dbConnection.State == ConnectionState.Closed)
+            if (_dapperDbConnection.State == ConnectionState.Closed)
             {
-                _dbConnection.Open();
+                _dapperDbConnection.Open();
             }
         }
         catch (Exception e)
@@ -72,7 +75,7 @@ public class BaseDbRepository
             return false;
         }
 
-        return _dbConnection.State == ConnectionState.Open;
+        return _dapperDbConnection.State == ConnectionState.Open;
     }
 
     /// <summary>
@@ -82,7 +85,8 @@ public class BaseDbRepository
     {
         try
         {
-            _dbConnection.Dispose();
+            _dapperDbConnection.Dispose();
+            _efDbConnection.Dispose();
         }
         catch (Exception e)
         {
@@ -183,6 +187,113 @@ public class BaseDbRepository
     }
 
     /// <summary>
+    /// ef core用order by 語法
+    /// </summary>
+    /// <param name="dbSet"></param>
+    /// <param name="orderParams"></param>
+    /// <typeparam name="TEntity"></typeparam>
+    protected void DbSetOrderBy<TEntity>(ref IQueryable<TEntity> dbSet, IDictionary<string, string> orderParams)
+        where TEntity : class
+    {
+        if (orderParams is not { Count: > 0 })
+        {
+            return;
+        }
+
+        var isFirstOrder = true;
+        IOrderedQueryable<TEntity>? orderedDbSet = null;
+
+        foreach (var orderParam in orderParams)
+        {
+            var propertyName = orderParam.Key;
+            var orderVal = orderParam.Value;
+            var isAscending = GetOrderVal(orderVal).Equals("ASC");
+
+            if (isFirstOrder)
+            {
+                orderedDbSet = isAscending
+                    ? dbSet.OrderBy(x => EF.Property<object>(x, propertyName))
+                    : dbSet.OrderByDescending(x => EF.Property<object>(x, propertyName));
+                isFirstOrder = false;
+            }
+            else
+            {
+                orderedDbSet = isAscending
+                    ? orderedDbSet!.ThenBy(x => EF.Property<object>(x, propertyName))
+                    : orderedDbSet!.ThenByDescending(x => EF.Property<object>(x, propertyName));
+            }
+        }
+
+        dbSet = orderedDbSet ?? dbSet;
+    }
+
+    /// <summary>
+    /// ef core用產生分頁資料
+    /// </summary>
+    /// <param name="dbSet"></param>
+    /// <param name="pageNumber"></param>
+    /// <param name="pageSize"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    protected async Task<PaginationModel<T>> DbSetPagination<T>(
+        IQueryable<T> dbSet,
+        int pageNumber = 1,
+        int pageSize = 15)
+    {
+        // 計算總記錄數
+        var dataCount = await dbSet.CountAsync();
+        
+        //計算總頁數
+        var totalPages = (int)Math.Ceiling((double)dataCount / pageSize);
+        
+        // 檢查頁碼是否超出範圍
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+        else if (pageNumber > totalPages)
+        {
+            pageNumber = totalPages;
+        }
+
+        // 應用分頁
+        var pagedData = await dbSet
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginationModel<T>
+        {
+            dataCount = dataCount,
+            totalPages = totalPages,
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            data = pagedData
+        };
+    }
+
+    /// <summary>
+    /// 紀錄欄位時間
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="columnList"></param>
+    /// <typeparam name="TEntity"></typeparam>
+    protected void UpdateColumnTimestamp<TEntity>(ref TEntity? entity, List<string> columnList) where TEntity : class
+    {
+        if (entity == null || columnList.Count <= 0) return;
+        var dataType = typeof(TEntity);
+        //轉換為字典，並依照欄位值更新時間
+        var paramDictionary = SystemHelper.EntityToDictionary(entity);
+        var nowTime = DateTime.UtcNow;
+        foreach (var columnName in columnList.Where(columnName => paramDictionary.ContainsKey(columnName)))
+        {
+            paramDictionary[columnName] = nowTime;
+        }
+
+        entity = SystemHelper.ConvertDictionaryToEntity(dataType, paramDictionary!) as TEntity;
+    }
+
+    /// <summary>
     /// 使用Dapper的擴充套件Dommel撰寫的oracle專用新增資料語法
     /// </summary>
     /// <param name="entity"></param>
@@ -253,7 +364,7 @@ public class BaseDbRepository
             }
 
             //執行語法
-            var sqlResult = _dbConnection.ExecuteScalarAsync(insertSql, orderParam);
+            var sqlResult = _dapperDbConnection.ExecuteScalarAsync(insertSql, orderParam);
             var resultStatus = sqlResult.IsCompletedSuccessfully;
 
             if (resultStatus)
@@ -277,7 +388,7 @@ public class BaseDbRepository
     /// <returns></returns>
     private ISqlBuilder GetSqlBuilder()
     {
-        return DommelMapper.GetSqlBuilder(_dbConnection);
+        return DommelMapper.GetSqlBuilder(_dapperDbConnection);
     }
 
     /// <summary>

@@ -13,7 +13,8 @@ using Microsoft.Extensions.Hosting.Internal;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.DommelBuilder;
+using SampleProject.Base.Util.DB;
+using SampleProject.Base.Util.DB.Dapper.DommelBuilder;
 using SampleProject.Base.Util.Filter;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
@@ -27,7 +28,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 //於此撰寫手動注入
-builder.Services.AddScoped<IBaseDbConnection, BaseDbConnection>();
+builder.InitDbContext();
 
 //使用 AutoFuc注入符合命名空間的class
 var config = builder.Configuration;

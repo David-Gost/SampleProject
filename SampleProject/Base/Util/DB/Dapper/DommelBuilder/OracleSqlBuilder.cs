@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Dommel;
 
-namespace SampleProject.Base.Util.DB.DommelBuilder;
+namespace SampleProject.Base.Util.DB.Dapper.DommelBuilder;
 
 /// <summary>
 /// 擴充Dapper.Dommel沒有支援Oracle

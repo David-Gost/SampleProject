@@ -54,7 +54,7 @@ public class SendMailJob
 
         var orderParams = new Dictionary<string, string>
         {
-            { "create_at", "ASC" },
+            { "created_at", "ASC" },
         };
 
         var dataList = _tempMailService.GetDatas(filterParams, orderParams, 1);
@@ -99,10 +99,10 @@ public class SendMailJob
 
                 //信件發送
                 var sendResult = SendMailHelper.Send(mailSettingData, mailContentData);
-
+                
                 var resultStatus = sendResult.sendStatus;
                 tempMailModel.sendCount += 1;
-
+                
                 if (resultStatus)
                 {
                     tempMailModel.sendStatus = 1;
@@ -112,7 +112,7 @@ public class SendMailJob
                 {
                     tempMailModel.lastErrorMessage = sendResult.message ?? "";
                 }
-
+                
                 //超過5次仍失敗，變更狀態，不再發送
                 if (tempMailModel.sendCount == 5)
                 {

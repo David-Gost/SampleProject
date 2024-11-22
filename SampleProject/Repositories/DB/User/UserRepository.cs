@@ -1,3 +1,4 @@
+using System.Data;
 using System.Dynamic;
 using System.Linq.Expressions;
 using Dapper;
@@ -6,16 +7,18 @@ using Microsoft.VisualBasic.CompilerServices;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
+using SampleProject.Base.Util.DB.Dapper;
+using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Models.DB.User;
+using SampleProject.Util;
 
 
 namespace SampleProject.Repositories.DB.User;
 
 public class UserRepository : BaseDbRepository
 {
-
-    public UserRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection) : base(configuration, baseDbConnection)
+    public UserRepository(DapperContextManager dapperContextManager, DbContextManager dbContextManager, IDbConnection dapperDbConnection, ApplicationDbContext efDbConnection) : base(dapperContextManager, dbContextManager, dapperDbConnection, efDbConnection)
     {
         SetDbConnection("CLOUD_POSTGRESQL");
     }
@@ -31,9 +34,9 @@ public class UserRepository : BaseDbRepository
         var account = inputData.account ?? "";
         // var sql = BaseFilterUserSql(inputData);
 
-        using (_dbConnection)
+        using (_dapperDbConnection)
         {
-            var dataResult = _dbConnection.GetAllAsync<Users, UserInfos, Users>(
+            var dataResult = _dapperDbConnection.GetAllAsync<Users, UserInfos, Users>(
                     (user, userInfo) =>
                     {
                         if (userId > 0)
@@ -62,7 +65,7 @@ public class UserRepository : BaseDbRepository
         var account = inputData.account ?? "";
         var sql = BaseFilterUserSql(inputData);
 
-        var resultData = _dbConnection
+        var resultData = _dapperDbConnection
             .QueryAsync(sql, new { filterUserId = userId, filterAccount = account }).Result;
         return resultData;
     }
@@ -76,7 +79,7 @@ public class UserRepository : BaseDbRepository
     {
         var insertId = InsertIntoOracle(userData);
 
-        return insertId != 0 ?  _dbConnection.GetAsync<Users>(insertId).Result : null;
+        return insertId != 0 ?  _dapperDbConnection.GetAsync<Users>(insertId).Result : null;
     }
 
     /// <summary>

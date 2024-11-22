@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleProject.Util;
 
-namespace SampleProject.Base.Util.DB.DommelJson;
+namespace SampleProject.Base.Util.DB.Dapper.DommelJson;
 
 /// <summary>
 /// 資料庫欄位型別Json處理（只處理JsonObject）

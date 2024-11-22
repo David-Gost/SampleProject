@@ -7,6 +7,6 @@
 /bin/
 /obj/
 /Hangfire/
-*.DS_Store
+.DS_Store
 /appsettings.LocalDevelopment.json
-Folder.DotSettings.user
+*.DotSettings.user

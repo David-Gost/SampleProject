@@ -1,19 +1,27 @@
+using System.Data;
 using Dapper;
 using Dommel;
 using Dommel.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using SampleProject.Base.Interface.DB;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.DommelJson;
+using SampleProject.Base.Util.DB.Dapper;
+using SampleProject.Base.Util.DB.Dapper.DommelJson;
+using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.DB.Common;
+using SampleProject.Util;
 
 namespace SampleProject.Repositories.DB.Common;
 
 public class TempMailRepository : BaseDbRepository
 {
-    public TempMailRepository(IConfiguration configuration, IBaseDbConnection baseDbConnection) : base(configuration, baseDbConnection)
+    public TempMailRepository(DapperContextManager dapperContextManager, DbContextManager dbContextManager,
+        IDbConnection dapperDbConnection, ApplicationDbContext efDbConnection) : base(dapperContextManager,
+        dbContextManager, dapperDbConnection, efDbConnection)
     {
-        SetDbConnection();
+        SetDbConnection("CLOUD_POSTGRESQL");
         DommelJsonMapper.AddJson(new DommelJsonOptions
         {
             EntityAssemblies = [typeof(TempMailModel).Assembly],
@@ -33,14 +41,13 @@ public class TempMailRepository : BaseDbRepository
             return null;
         }
 
-        var dataId = (int)await _dbConnection.InsertAsync(tempMailModel);
-
-        if (dataId != 0)
+        await using (_efDbConnection)
         {
-            return await Task.FromResult(dataId > 0 ? _dbConnection.GetAsync<TempMailModel>(dataId).Result! : null);
+            var result = await _efDbConnection.AddAsync(tempMailModel);
+            await _efDbConnection.SaveChangesAsync();
+            Console.WriteLine(_efDbConnection.TempMails.ToQueryString());
+            return await Task.FromResult(result.Entity);
         }
-
-        return null;
     }
 
     /// <summary>
@@ -51,11 +58,12 @@ public class TempMailRepository : BaseDbRepository
     public async Task<TempMailModel?>? UpdateMailData(TempMailModel tempMailModel)
     {
         var dataId = tempMailModel.id;
-        var updateResult = _dbConnection.UpdateAsync(tempMailModel).Result;
+        var updateResult = _dapperDbConnection.UpdateAsync(tempMailModel).Result;
 
         if (dataId != 0 && updateResult)
         {
-            return await Task.FromResult(dataId > 0 ? _dbConnection.GetAsync<TempMailModel>(dataId).Result! : null);
+            return await Task.FromResult(
+                dataId > 0 ? _dapperDbConnection.GetAsync<TempMailModel>(dataId).Result! : null);
         }
 
         return null;
@@ -74,7 +82,15 @@ public class TempMailRepository : BaseDbRepository
         int limit = 0,
         bool isOnce = false)
     {
-        return await BaseGetFilter(filterParams, orderParams, limit, isOnce);
+        var dbSet = BaseGetFilter(filterParams, orderParams);
+        var result = await dbSet.ToListAsync();
+
+        if (isOnce)
+        {
+            DisposeConnect();
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -82,15 +98,11 @@ public class TempMailRepository : BaseDbRepository
     /// </summary>
     /// <param name="filterParams"></param>
     /// <param name="orderParams"></param>
-    /// <param name="limit"></param>
-    /// <param name="isOnce"></param>
     /// <returns></returns>
-    private async Task<IEnumerable<TempMailModel>?> BaseGetFilter(IDictionary<string, object>? filterParams = null,
-        IDictionary<string, string>? orderParams = null,
-        int limit = 0, bool isOnce = false)
+    private IQueryable<TempMailModel> BaseGetFilter(IDictionary<string, object>? filterParams = null,
+        IDictionary<string, string>? orderParams = null)
     {
-        var query = "SELECT * FROM temp_mail";
-        var whereParams = new List<IDictionary<string, string>>();
+        var dbSet = _efDbConnection.TempMails.AsQueryable();
 
         List<int>? ids = null;
         List<int>? sendStatus = null;
@@ -102,7 +114,7 @@ public class TempMailRepository : BaseDbRepository
                 ids = (List<int>)filterIds;
                 if (ids.Count != 0)
                 {
-                    whereParams.Add(CreateWhereParams("id = ANY (@filterIds) "));
+                    dbSet = dbSet.Where(x => ids.Contains(x.id));
                 }
             }
 
@@ -112,30 +124,13 @@ public class TempMailRepository : BaseDbRepository
                 sendStatus = (List<int>)filterSendStatus;
                 if (sendStatus.Count > 0)
                 {
-                    whereParams.Add(CreateWhereParams("send_status = ANY (@filterSendStatus)"));
+                    dbSet = dbSet.Where(x => sendStatus.Contains(x.sendStatus));
                 }
             }
         }
 
         //排序
-        query += FilterParamsToQuery(whereParams) + OrderByParamsToQuery(orderParams!);
-
-        if (limit > 0)
-        {
-            query += $" LIMIT {limit}";
-        }
-
-        var result = await _dbConnection.QueryAsync<TempMailModel>(query, new
-        {
-            filterIds = ids,
-            filterSendStatus = sendStatus,
-        });
-
-        if (isOnce)
-        {
-            DisposeConnect();
-        }
-
-        return result;
+        DbSetOrderBy(ref dbSet, orderParams!);
+        return dbSet;
     }
 }

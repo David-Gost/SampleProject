@@ -42,6 +42,36 @@ public static class SystemHelper
 
         return returnData;
     }
+    
+    /// <summary>
+    /// request內orderList轉換為字典
+    /// </summary>
+    /// <param name="orderList"></param>
+    /// <returns></returns>
+    public static Dictionary<string, string> RequestOrderParamToDictionary(List<string>? orderList)
+    {
+        if (orderList == null || orderList.Count == 0) return new Dictionary<string, string>();
+        var orderDictionary = new Dictionary<string, string>();
+        foreach (var orderVal in orderList)
+        {
+            var orderValArray = orderVal.Split("|");
+            if (orderValArray.Length != 2) continue;
+            var columnName = orderValArray[0].Trim();
+            var orderType = orderValArray[1].Trim();
+            var conventColumn = "";
+            var conventOrderType = "";
+
+            //轉換排序字符
+            conventOrderType = orderType.ToUpper().Equals("DESC") ? "DESC" : "ASC";
+
+            if (!conventColumn.Equals("") && !conventOrderType.Equals(""))
+            {
+                orderDictionary.Add(columnName, conventOrderType);
+            }
+        }
+
+        return orderDictionary;
+    }
 
     /// <summary>
     /// 小駝峰文字轉換
@@ -134,5 +164,28 @@ public static class SystemHelper
     {
         return typeof(TEntity).GetProperties()
             .ToDictionary(property => property.Name, property => property.GetValue(entity, null));
+    }
+    
+    
+    /// <summary>
+    /// 字典轉換為Entity
+    /// </summary>
+    /// <param name="dateType"></param>
+    /// <param name="dictionary"></param>
+    /// <returns></returns>
+    public static object? ConvertDictionaryToEntity(Type dateType, Dictionary<string, object> dictionary)
+    {
+        var entity = Activator.CreateInstance(dateType);
+        var properties = dateType.GetProperties();
+
+        foreach (var property in properties)
+        {
+            if (dictionary.TryGetValue(property.Name, out var value))
+            {
+                property.SetValue(entity, value == null ? null : Convert.ChangeType(value, property.PropertyType));
+            }
+        }
+
+        return entity;
     }
 }

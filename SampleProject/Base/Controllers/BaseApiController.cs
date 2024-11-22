@@ -28,10 +28,10 @@ public class BaseApiController : ControllerBase
         dynamic apiResponse = new BaseApiResponse();
 
         //dataCode不為空時多回應
-        if (string.IsNullOrEmpty(dataCode))
-        {
-            apiResponse.dataCode = dataCode;
-        }
+        // if (string.IsNullOrEmpty(dataCode))
+        // {
+        //     apiResponse.dataCode = dataCode;
+        // }
 
         //無傳回應資料時產生空物件
         resultData ??= new ExpandoObject();
