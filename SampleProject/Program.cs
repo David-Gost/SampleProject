@@ -8,8 +8,11 @@ using ElmahCore.Mvc;
 using Hangfire;
 using Hangfire.MySql;
 using Hangfire.Storage.SQLite;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.OpenApi.Models;
 using Oracle.ManagedDataAccess.Client;
 using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
@@ -20,6 +23,7 @@ using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
 using SampleProject.Jobs;
 using SampleProject.Middleware;
+using SampleProject.Middleware.Auth.Base;
 using SampleProject.Services.DB.User;
 using SQLite;
 
@@ -77,7 +81,7 @@ if (hangfireConfig != null)
             switch (hangfireStorageType)
             {
                 default:
-                    
+
                     //有例外類型，強制不啟用
                     hangfireStatus = false;
                     break;
@@ -123,7 +127,7 @@ if (hangfireConfig != null)
 if (hangfireStatus)
 {
     builder.Services.AddHangfireServer();
-    
+
     #region 注入排程工作
 
     // builder.AddExampleJob();
@@ -131,6 +135,7 @@ if (hangfireStatus)
 
     #endregion
 }
+
 #endregion
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -143,6 +148,33 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "JWT授權(數據將在請求header中進行傳輸)在下方輸入Bearer {token}即可，注意兩者之間有空格",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Id = "Bearer",
+                    Type = ReferenceType.SecurityScheme
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
 });
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -181,9 +213,22 @@ if (elmahIsOn)
 
 builder.Services.AddControllers(options =>
 {
+    
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAssertion(_ => true)
+        .Build();
+    options.Filters.Add(new AllowAnonymousFilter());
+    options.Filters.Add(new AuthorizeFilter(policy));
+    
     //加入自訂的model檢查
     options.Filters.Add<ModelValidationAttribute>();
 });
+
+#region Api Auth規則設定
+
+builder.Services.AddAuthentication("Bearer").AddScheme<BaseSchemeOptions, BaseTokenHandler>("Bearer", options => { });
+
+#endregion
 
 #region 專案資源資料夾
 
@@ -273,10 +318,11 @@ if (hangfireStatus)
     app.UseHangfireDashboard("/hangfire");
 
     #region 加入排程
-    
+
     //以下加入定義的排程
     // app.SetExampleJob();
     // app.SetSendMailJob();
+
     #endregion
 }
 
@@ -285,7 +331,7 @@ if (hangfireStatus)
 app.UseMiddleware<UrlPathAuthMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ExceptionHandleMiddleware>();
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();

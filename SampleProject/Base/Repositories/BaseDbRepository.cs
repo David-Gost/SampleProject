@@ -9,7 +9,7 @@ using SampleProject.Base.Models.DB;
 using SampleProject.Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Helpers;
-using SampleProject.Util;
+using SampleProject.Database;
 
 namespace SampleProject.Base.Repositories;
 

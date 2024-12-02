@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SampleProject.Base.Controllers;
 using SampleProject.Base.Models.File;
@@ -33,6 +34,7 @@ public class TestController : BaseApiController
         {
             uploadPath = "",
             baseUrl = $"{scheme}://{domainName}",
+            allowAllExtension = true,
         };
         return Task.FromResult(BackCall(FileHelper.UploadDocument(file, fileOption)!));
     }
@@ -97,7 +99,7 @@ public class TestController : BaseApiController
             }
         };
 
-        return Task.FromResult(BackCall(HttpHelper.FormRequest(formDataList, clientOption).Result!, 200, "", "4000"));
+        return Task.FromResult(BackCall(HttpHelper.FormRequest(formDataList, clientOption).Result!));
     }
 
     /// <summary>
@@ -111,6 +113,7 @@ public class TestController : BaseApiController
         return Task.FromResult(BackCall(data));
     }
 
+    [Authorize]
     [HttpPost("DbTest")]
     public Task<IActionResult> DbTest()
     {

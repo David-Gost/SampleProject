@@ -11,7 +11,7 @@ using SampleProject.Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.Dapper.DommelJson;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.DB.Common;
-using SampleProject.Util;
+using SampleProject.Database;
 
 namespace SampleProject.Repositories.DB.Common;
 

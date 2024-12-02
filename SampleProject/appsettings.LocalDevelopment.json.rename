@@ -1,4 +1,5 @@
 {
+  "AppKeys":"",
   "Logging": {
     "LogLevel": {
       "Default": "Information",
@@ -41,6 +42,15 @@
           "Connection": ""
         }
       }
+    },
+    "JwtSettings": {
+      "Remark": "JWT相關設定",
+      "Secret": "",
+      "ExpirationInMinutes": 60,
+      "RefreshTokenExpirationInDays": 14,
+      "ValidateAudience": true,
+      "ValidateLifetime": true,
+      "ValidateIssuerSigningKey": true
     }
   },
   "DBConnection": {
@@ -84,5 +94,5 @@
       "Name": "",
       "Remark": "寄件者資料，可設定寄件地址＆顯示名稱"
     }
-  }  
+  }
 }

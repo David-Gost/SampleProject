@@ -14,15 +14,14 @@ public class BaseApiController : ControllerBase
     /// <param name="httpCode">httpCode</param>
     /// <param name="messageType"></param>
     /// <param name="message">訊息</param>
-    /// <param name="dataCode">資料代碼，依照狀況使用，預設可不填寫</param>
     /// 
     /// <returns></returns>
     protected IActionResult BackCall(
         object resultData,
-        int httpCode = 200,
+        object? message = null,
         string messageType = MessageType.SUCCESS,
-        string message = "",
-        string dataCode = "")
+        int httpCode = 200
+    )
     {
         //定義回傳資料物件
         dynamic apiResponse = new BaseApiResponse();
@@ -39,7 +38,7 @@ public class BaseApiController : ControllerBase
         apiResponse.result = resultData;
 
         apiResponse.messageType = messageType;
-        apiResponse.message = message;
+        apiResponse.message = message ?? "";
 
         return httpCode == 204 ? NoContent() : StatusCode(httpCode, apiResponse);
     }

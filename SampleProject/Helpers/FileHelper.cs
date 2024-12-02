@@ -132,6 +132,18 @@ public static class FileHelper
             uploadOption!.uploadPath = "documents";
         }
 
+        //不檢查附檔名
+        if (uploadOption.allowAllExtension)
+            return formFileData switch
+            {
+                List<IFormFile> fileList =>
+                    //多檔上傳
+                    UploadMultiFile(fileList!, uploadOption),
+                IFormFile formFile =>
+                    //單檔上傳
+                    UploadSingleFile(formFile, uploadOption),
+                _ => UploadSingleFile(null, uploadOption)
+            };
         //允許副檔名
         if (uploadOption.allowExtension is { Count: 0 })
         {
@@ -147,7 +159,8 @@ public static class FileHelper
         {
             uploadOption.allowMimeType =
             [
-                "text/plain", "application/json", "application/pdf", "application/msword", "application/vnd.ms-excel",
+                "text/plain", "application/json", "application/pdf", "application/msword",
+                "application/vnd.ms-excel",
                 "application/vnd.ms-powerpoint",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -403,7 +416,7 @@ public static class FileHelper
         {
             return;
         }
-        
+
         var pathVal = Path.Combine(Directory.GetCurrentDirectory(), pathName);
 
         if (!Directory.Exists(pathVal))

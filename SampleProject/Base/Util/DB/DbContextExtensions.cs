@@ -3,7 +3,7 @@ using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
 using SampleProject.Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
-using SampleProject.Util;
+using SampleProject.Database;
 
 namespace SampleProject.Base.Util.DB;
 

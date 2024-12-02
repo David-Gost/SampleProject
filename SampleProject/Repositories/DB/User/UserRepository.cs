@@ -11,7 +11,7 @@ using SampleProject.Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Models.DB.User;
-using SampleProject.Util;
+using SampleProject.Database;
 
 
 namespace SampleProject.Repositories.DB.User;

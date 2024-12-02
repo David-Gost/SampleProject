@@ -6,6 +6,12 @@
 
 1. 複製檔案appsettings.LocalDevelopment.json.rename 為 appsettings.LocalDevelopment.json
 2. 於appsettings.LocalDevelopment.json設定db連線或啟用的服務
+3. 若為使用專案本身驗證，無透過其他方式，逐步執行以下指令，並複製數值到設定檔中
+~~~bash
+dotnet user-secrets init 
+dotnet user-secrets set "SystemOption:JwtSettings:Secret" "$(openssl rand -base64 32)"
+dotnet user-secrets set "AppKeys" "$(openssl rand -base64 32)"
+~~~
 
 #  開發相關
 

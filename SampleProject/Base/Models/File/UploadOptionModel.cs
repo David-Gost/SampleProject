@@ -16,6 +16,11 @@ public class UploadOptionModel
     public string uploadPath { get; set; } = "";
 
     /// <summary>
+    /// 不檢查檔案副檔名
+    /// </summary>
+    public bool allowAllExtension { get; set; } = false;
+    
+    /// <summary>
     /// 允許副檔名
     /// </summary>
     public List<string> allowExtension { get; set; } = [];
