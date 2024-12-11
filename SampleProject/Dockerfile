@@ -1,21 +1,32 @@
-﻿FROM --platform=linux/amd64  mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
-WORKDIR /app
-
-FROM --platform=linux/amd64  mcr.microsoft.com/dotnet/sdk:8.0 AS build
+﻿# 構建階段
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# 複製專案文件
 COPY ["SampleProject.csproj", "SampleProject/"]
 RUN dotnet restore "SampleProject/SampleProject.csproj"
 
 WORKDIR "/src/SampleProject"
 COPY . .
-RUN dotnet build "SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/build
+# 安裝 Entity Framework Core 工具
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="${PATH}:/root/.dotnet/tools"
 
-FROM build AS publish
-RUN dotnet publish "SampleProject.csproj" -c $BUILD_CONFIGURATION  --no-restore -o /app/publish /p:UseAppHost=false
+# 構建和發布
+RUN dotnet build "SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/build 
+RUN dotnet publish "SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+# 最終階段
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
+
+# 複製 EF Core 工具到最終鏡像
+COPY --from=build /root/.dotnet/tools /root/.dotnet/tools
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+# 移除暫存
+RUN rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT ["dotnet", "SampleProject.dll"]
