@@ -9,6 +9,18 @@ namespace SampleProject.Helpers;
 public static class SystemHelper
 {
     /// <summary>
+    /// 取得系統UTC時間
+    /// </summary>
+    /// <returns></returns>
+    public static DateTime GetNowUtc()
+    {
+        var localZone = TimeZoneInfo.Local;
+        // 獲取當前本地時間並轉換為 UTC
+        var localTime = DateTime.UtcNow;
+        return DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeFromUtc(localTime, localZone), DateTimeKind.Utc);
+    }
+
+    /// <summary>
     /// 基本多筆資料轉換
     /// </summary>
     /// <param name="fromList"></param>
@@ -42,7 +54,7 @@ public static class SystemHelper
 
         return returnData;
     }
-    
+
     /// <summary>
     /// request內orderList轉換為字典
     /// </summary>
@@ -139,7 +151,7 @@ public static class SystemHelper
 
         return resultObj;
     }
-    
+
     /// <summary>
     /// 任意物件轉換為ExpandoObject
     /// </summary>
@@ -147,8 +159,7 @@ public static class SystemHelper
     /// <returns></returns>
     public static ExpandoObject AnyObjToExpandoObject(object? fromObj)
     {
-
-        var content=JsonConvert.SerializeObject(fromObj);
+        var content = JsonConvert.SerializeObject(fromObj);
         dynamic resultObj = JsonConvert.DeserializeObject<ExpandoObject>(content);
 
         return resultObj;
@@ -165,8 +176,7 @@ public static class SystemHelper
         return typeof(TEntity).GetProperties()
             .ToDictionary(property => property.Name, property => property.GetValue(entity, null));
     }
-    
-    
+
     /// <summary>
     /// 字典轉換為Entity
     /// </summary>

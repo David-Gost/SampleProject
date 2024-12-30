@@ -242,16 +242,16 @@ public class BaseDbRepository
     {
         // 計算總記錄數
         var dataCount = await dbSet.CountAsync();
-        
+
         //計算總頁數
         var totalPages = (int)Math.Ceiling((double)dataCount / pageSize);
-        
+
         // 檢查頁碼是否超出範圍
         if (pageNumber < 1)
         {
             pageNumber = 1;
         }
-        else if (pageNumber > totalPages)
+        else if (totalPages > 1 && pageNumber > totalPages)
         {
             pageNumber = totalPages;
         }
@@ -305,38 +305,38 @@ public class BaseDbRepository
         {
             return 0;
         }
-
+    
         var returnData = 0;
         var dataType = typeof(TEntity);
         var sqlBuilder = GetSqlBuilder();
-
+    
         //表名稱
         var tableName = Resolvers.Table(dataType, sqlBuilder);
-
+    
         //產生model中所有值欄位資料
         var keyProperties = Resolvers.KeyProperties(dataType);
-
+    
         //表鍵值
         var properties = keyProperties.Where(p => p.IsGenerated).Select(p => p.Property);
-
+    
         //取第一鍵值
         var property = properties.FirstOrDefault();
         var typeProperties = Resolvers.Properties(dataType)
             .Where(x => !x.IsGenerated)
             .Select(x => x.Property)
             .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property)).ToList();
-
+    
         //表欄位
         var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false)).ToArray();
-
+    
         //數值欄位
         var paramNames = typeProperties.Select(p => sqlBuilder.PrefixParameter(p.Name)).ToArray();
-
+    
         //產生insert 語句
         var insertSql = sqlBuilder.BuildInsert(dataType, tableName, columnNames, paramNames);
-
+    
         var orderParam = new OracleDynamicParameters();
-
+    
         var propertyName = "";
         if (property != null)
         {
@@ -349,24 +349,24 @@ public class BaseDbRepository
                 dbType: OracleMappingType.Int32,
                 direction: ParameterDirection.Output);
         }
-
+    
         try
         {
             var paramDictionary = SystemHelper.EntityToDictionary(entity);
-
+    
             for (var i = 0; i < columnNames.Length; i++)
             {
                 var paramName = paramNames[i].Replace(":", "");
                 var paramVal = paramDictionary[paramName] ?? null;
-
+    
                 //帶入數值
                 orderParam.Add(paramName, paramVal);
             }
-
+    
             //執行語法
             var sqlResult = _dapperDbConnection.ExecuteScalarAsync(insertSql, orderParam);
             var resultStatus = sqlResult.IsCompletedSuccessfully;
-
+    
             if (resultStatus)
             {
                 //新增成功
@@ -378,7 +378,7 @@ public class BaseDbRepository
             Console.WriteLine(e);
             throw;
         }
-
+    
         return returnData;
     }
 

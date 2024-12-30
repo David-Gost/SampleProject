@@ -1,10 +1,13 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using SampleProject.Base.Interface.DB;
+using SampleProject.Base.Interface.DB.PEC;
 using SampleProject.Helpers;
 
-namespace SampleProject.Base.Util.DB.EFCore;
+namespace SampleProject.Base.Util.DB.EFCore.PEC;
 
+/// <summary>
+/// ef core的base，相關複寫都在這
+/// </summary>
 public class BaseDbContext : DbContext
 {
     public BaseDbContext(DbContextOptions options) : base(options)
@@ -38,13 +41,13 @@ public class BaseDbContext : DbContext
         foreach (var entityEntry in entries)
         {
             var entity = (ISoftDeletable)entityEntry.Entity;
-            entity.deletedAt = nowTime;
+            entity.deletionDate = nowTime;
             entityEntry.State = EntityState.Modified;
             
             // 遍歷所有屬性，將除 deletedAt 外的所有屬性標記為未修改
             foreach (var property in entityEntry.Properties)
             {
-                if (property.Metadata.Name != nameof(ISoftDeletable.deletedAt))
+                if (property.Metadata.Name != nameof(ISoftDeletable.deletionDate))
                 {
                     property.IsModified = false;
                 }
@@ -70,22 +73,22 @@ public class BaseDbContext : DbContext
             {
                 case EntityState.Added:
                     
-                    entity.createdAt = nowTime;
+                    entity.creationDate = nowTime;
                     break;
                 case EntityState.Modified:
                     
                     // 保持 createdAt 為原始值
-                    if (entityEntry.Property(nameof(ITimestampable.createdAt)).IsModified)
+                    if (entityEntry.Property(nameof(ITimestampable.creationDate)).IsModified)
                     {
-                        entityEntry.Property(nameof(ITimestampable.createdAt)).CurrentValue = 
-                            entityEntry.Property(nameof(ITimestampable.createdAt)).OriginalValue;
+                        entityEntry.Property(nameof(ITimestampable.creationDate)).CurrentValue = 
+                            entityEntry.Property(nameof(ITimestampable.creationDate)).OriginalValue;
                     }
-                    entityEntry.Property(nameof(ITimestampable.createdAt)).IsModified = false;
+                    entityEntry.Property(nameof(ITimestampable.creationDate)).IsModified = false;
 
                     // 處理軟刪除
                     if (entity is ISoftDeletable)
                     {
-                        entityEntry.Property(nameof(ISoftDeletable.deletedAt)).IsModified = false;
+                        entityEntry.Property(nameof(ISoftDeletable.deletionDate)).IsModified = false;
                     }
 
                     break;
@@ -93,7 +96,7 @@ public class BaseDbContext : DbContext
                     throw new ArgumentOutOfRangeException();
             }
 
-            entity.updatedAt = nowTime;
+            entity.lastModifyDate = nowTime;
         }
     }
 
@@ -111,12 +114,12 @@ public class BaseDbContext : DbContext
     }
     
     /// <summary>
-    /// 存在deletedAt欄位時，預設不撈取有
+    /// 存在deletedAt欄位時，預設不撈取有值資料
     /// </summary>
     /// <param name="modelBuilder"></param>
     /// <typeparam name="T"></typeparam>
     private void SetSoftDeleteFilter<T>(ModelBuilder modelBuilder) where T : class, ISoftDeletable
     {
-        modelBuilder.Entity<T>().HasQueryFilter(e => e.deletedAt == null);
+        modelBuilder.Entity<T>().HasQueryFilter(e => e.deletionDate == null);
     }
 }
