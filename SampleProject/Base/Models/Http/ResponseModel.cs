@@ -15,7 +15,7 @@ public class ResponseModel
     public string content { get; set; } = "";
 
     /// <summary>
-    /// 是否為Json格式資料
+    /// content格式資料
     /// </summary>
-    public bool isJsonData { get; set; } = false;
+    public ResponseContentType responseContentType { get; set; } 
 }

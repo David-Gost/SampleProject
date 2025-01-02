@@ -23,9 +23,9 @@ public class ClientOptionModel
     public Dictionary<string, string> urlParams { get; set; }
 
     /// <summary>
-    /// BearerToken 數值
+    /// 驗證類型
     /// </summary>
-    public string bearerToken { get; set; } = "";
+    public AuthModel authModel { get; set; }
 
     /// <summary>
     /// 連線等待秒數

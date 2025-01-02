@@ -1,11 +1,14 @@
 using System.Diagnostics.Metrics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
+using System.Xml.Serialization;
 using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleProject.Base.Models.Http;
+using SampleProject.Base.Models.Http.AuthType;
 using SampleProject.Base.Models.Http.Form;
 
 namespace SampleProject.Helpers;
@@ -53,7 +56,7 @@ public static class HttpHelper
             //檢查內容是否為Json格式
             if (DataHelper.IsValidJson(viewContent))
             {
-                responseData.isJsonData = true;
+                responseData.responseContentType = ResponseContentType.JSON;
             }
 
             return responseData;
@@ -72,7 +75,7 @@ public static class HttpHelper
     /// <param name="clientOption">羨羨參數設定</param>
     /// <typeparam name="T">可帶入任何型別資料，會自動轉為Json</typeparam>
     /// <returns></returns>
-    public static async Task<ResponseModel?> RawContentRequest<T>(T? sendData, ClientOptionModel clientOption)
+    public static async Task<ResponseModel?> JsonContentRequest<T>(T? sendData, ClientOptionModel clientOption)
     {
         var responseData = new ResponseModel();
 
@@ -109,7 +112,73 @@ public static class HttpHelper
             //檢查內容是否為Json格式
             if (DataHelper.IsValidJson(viewContent))
             {
-                responseData.isJsonData = true;
+                responseData.responseContentType = ResponseContentType.JSON;
+            }
+
+            return responseData;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request exception: {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// XML request
+    /// </summary>
+    /// <param name="sendData">XML 內容</param>
+    /// <param name="clientOption">請求參數設定</param>
+    /// <returns></returns>
+    public static async Task<ResponseModel?> XmlContentRequest<T>(T? sendData, ClientOptionModel clientOption)
+    {
+        var responseData = new ResponseModel();
+
+        //建立httpClient
+        using var client = InitHttpClient(clientOption);
+
+        // 建立一個 HttpRequestMessage
+        using var request = InitRequestMessage(clientOption);
+
+        //設置 XML 內容
+        if (sendData != null)
+        {
+            string xmlContent;
+            
+            if (sendData is string dataVal)
+            {
+                xmlContent = dataVal;
+            }
+            else
+            {
+                var xmlSerializer = new XmlSerializer(typeof(T));
+                await using var stringWriter = new StringWriter();
+                xmlSerializer.Serialize(stringWriter, sendData);
+                xmlContent = stringWriter.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(xmlContent))
+            {
+                var stringContent = new StringContent(xmlContent, Encoding.UTF8, "application/xml");
+                request.Content = stringContent;
+            }
+        }
+
+        try
+        {
+            // 發送請求
+            var response = await client.SendAsync(request);
+
+            responseData.statusCode = response.StatusCode;
+
+            // 讀取並輸出回應
+            var viewContent = await response.Content.ReadAsStringAsync();
+            responseData.content = viewContent;
+
+            //檢查內容是否為XML格式
+            if (DataHelper.IsValidXml(viewContent))
+            {
+                responseData.responseContentType = ResponseContentType.XML;
             }
 
             return responseData;
@@ -161,7 +230,6 @@ public static class HttpHelper
     /// <param name="headerParams"></param>
     private static void RequestAddHeader(ref HttpRequestMessage request, Dictionary<string, string> headerParams)
     {
-
         switch (headerParams)
         {
             case null:
@@ -191,6 +259,8 @@ public static class HttpHelper
             AllowAutoRedirect = autoRedirect, //依設定檔決定是否接收302時自動跳轉
         };
 
+        PreAuth(clientOption.authModel, ref handler);
+
         var client = new HttpClient(handler);
 
         //數字異常，變為預設20
@@ -214,21 +284,64 @@ public static class HttpHelper
         // 使用的 API URL
         var requestUri = UrlAddParams(clientOption.requestApiUrl, clientOption.urlParams);
 
-        var jwtToken = clientOption.bearerToken ?? "";
-
         // 建立一個 HttpRequestMessage
         var request = new HttpRequestMessage(clientOption.httpMethod, requestUri);
 
         //request加入自訂Header
         RequestAddHeader(ref request, clientOption.headerParams);
 
-        //header加入Bearer Token
-        if (!jwtToken.Equals(""))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-        }
+        //request加入驗證
+        var authModel = clientOption.authModel;
+        RequestMessageAuth(authModel, ref request);
 
         return request;
+    }
+
+    /// <summary>
+    /// 先驗證模式
+    /// </summary>
+    /// <param name="authModel"></param>
+    /// <param name="handler"></param>
+    private static void PreAuth(AuthModel? authModel, ref HttpClientHandler handler)
+    {
+        if (authModel == null) return;
+        var authType = authModel.authType?.ToLower() ?? "";
+
+        switch (authType)
+        {
+            case "digest":
+                if (authModel is DigestAuthModel digestAuthModel)
+                {
+                    handler.Credentials = new NetworkCredential(digestAuthModel.userName, digestAuthModel.password);
+                    handler.PreAuthenticate = true;
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 送出Request時健行驗證
+    /// </summary>
+    /// <param name="authModel"></param>
+    /// <param name="request"></param>
+    private static void RequestMessageAuth(AuthModel? authModel, ref HttpRequestMessage request)
+    {
+        if (authModel == null) return;
+        var authType = authModel.authType?.ToLower() ?? "";
+
+        switch (authType)
+        {
+            case "jwt":
+                if (authModel is JwtAuthModel jwtAuthModel)
+                {
+                    var requestHeaderPrefix = jwtAuthModel.requestHeaderPrefix ?? "Bearer";
+                    var token = jwtAuthModel.token ?? "";
+                    request.Headers.Authorization = new AuthenticationHeaderValue(requestHeaderPrefix, token);
+                }
+
+                break;
+        }
     }
 
     /// <summary>

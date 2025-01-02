@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SampleProject.Base.Controllers;
 using SampleProject.Base.Models.File;
 using SampleProject.Base.Models.Http;
+using SampleProject.Base.Models.Http.AuthType;
 using SampleProject.Base.Models.Http.Form;
 using SampleProject.Helpers;
 using SampleProject.Services.Custom;
@@ -62,12 +63,16 @@ public class TestController : BaseApiController
     [HttpGet("CallApiTest")]
     public Task<IActionResult> CallApiTest()
     {
+        var jwtAuthModel = new JwtAuthModel
+        {
+            token =
+                "eyJhbGciOiJIUzI1NiJ9.W9mSdC0zsW4NlA8T6fvaE4uz4hgYcpVBSRv5T_lbMBapbZKChbvBemBxvtk4doUfv2ErleamidX7Ojz3cLiBvTxfRt7unA8y6UDeqJuboBx6YRgZU6zkGshiYa8s9fIb74RMtQcmVPfLor70w6irfqILKr8sFezo0lJCaxw8cUo.JvqoInwQdYYkuvP1TMtFgVIa32bbrgzWDzLK9yfPdL8"
+        };
         var clientOption = new ClientOptionModel
         {
             requestApiUrl = "http://localhost:5209/FormApiTest",
             httpMethod = HttpMethod.Post,
-            bearerToken =
-                "eyJhbGciOiJIUzI1NiJ9.W9mSdC0zsW4NlA8T6fvaE4uz4hgYcpVBSRv5T_lbMBapbZKChbvBemBxvtk4doUfv2ErleamidX7Ojz3cLiBvTxfRt7unA8y6UDeqJuboBx6YRgZU6zkGshiYa8s9fIb74RMtQcmVPfLor70w6irfqILKr8sFezo0lJCaxw8cUo.JvqoInwQdYYkuvP1TMtFgVIa32bbrgzWDzLK9yfPdL8",
+            authModel = jwtAuthModel,
             headerParams = new Dictionary<string, string> { { "a", "a_val" } }
         };
 

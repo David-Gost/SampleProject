@@ -1,4 +1,5 @@
 using System.Text;
+using System.Xml;
 using Newtonsoft.Json;
 
 namespace SampleProject.Helpers;
@@ -101,6 +102,25 @@ public static class DataHelper
             }
         }
         else
+        {
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// 檢查是否為XML格式
+    /// </summary>
+    /// <param name="xml"></param>
+    /// <returns></returns>
+    public static bool IsValidXml(string xml)
+    {
+        try
+        {
+            var doc = new XmlDocument();
+            doc.LoadXml(xml);
+            return true;
+        }
+        catch
         {
             return false;
         }
