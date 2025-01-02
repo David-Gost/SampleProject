@@ -41,7 +41,7 @@ public class AuthUserService
             };
         }
 
-        dataResult.messages.Add(message);
+        dataResult.messages=message;
 
 
         return dataResult;
@@ -72,7 +72,7 @@ public class AuthUserService
                 refreshToken = userData.refreshToken ?? "",
             };
         }
-        dataResult.messages.Add(message);
+        dataResult.messages=message;
         return dataResult;
     }
 
