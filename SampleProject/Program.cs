@@ -11,6 +11,7 @@ using Hangfire.Storage.SQLite;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.OpenApi.Models;
 using Oracle.ManagedDataAccess.Client;
@@ -19,6 +20,7 @@ using SampleProject.Base.Repositories;
 using SampleProject.Base.Util.DB;
 using SampleProject.Base.Util.DB.Dapper.DommelBuilder;
 using SampleProject.Base.Util.Filter;
+using SampleProject.Database;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
 using SampleProject.Jobs;
@@ -46,6 +48,20 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         containerBuilder.RegisterAssemblyTypes(assembly)
             .Where(fileType => fileType.Namespace != null &&
                                !fileType.Namespace.Contains(".Base.") &&
+                               fileTypeRegex.IsMatch(fileType.Namespace))
+            .AsSelf()
+            .InstancePerLifetimeScope();
+    });
+
+//注入seeder
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
+    {
+        var fileTypeRegex = new Regex(@".(Seeder)");
+        var assembly = Assembly.GetExecutingAssembly();
+        containerBuilder.RegisterAssemblyTypes(assembly)
+            .Where(fileType => fileType.Namespace != null &&
+                               fileType.Namespace.Contains(".Database.") &&
                                fileTypeRegex.IsMatch(fileType.Namespace))
             .AsSelf()
             .InstancePerLifetimeScope();
@@ -213,13 +229,12 @@ if (elmahIsOn)
 
 builder.Services.AddControllers(options =>
 {
-    
     var policy = new AuthorizationPolicyBuilder()
         .RequireAssertion(_ => true)
         .Build();
     options.Filters.Add(new AllowAnonymousFilter());
     options.Filters.Add(new AuthorizeFilter(policy));
-    
+
     //加入自訂的model檢查
     options.Filters.Add<ModelValidationAttribute>();
 });
@@ -325,6 +340,44 @@ if (hangfireStatus)
 
     #endregion
 }
+
+#endregion
+
+#region 自動執行migration update
+
+var autoMigrationConfig = systemOptionDictionary.GetValueOrDefault("AutoMigrationUpdateConfig");
+var autoMigrationEnabled = autoMigrationConfig?.GetValue<bool>("IsOn") ?? false;
+
+if (autoMigrationEnabled)
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+            Console.WriteLine("Database migrations applied successfully.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while migrating the database: {ex.Message}");
+    }
+}
+
+#endregion
+
+#region seeder
+
+// 在應用啟動時執行 Seeder
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     var roleSeeder = services.GetRequiredService<RoleSeeder>();
+//     await roleSeeder.SeedAsync();
+// }
 
 #endregion
 
