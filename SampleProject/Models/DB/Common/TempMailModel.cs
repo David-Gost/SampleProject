@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using Dommel.Json;
-using SampleProject.Base.Interface.DB;
+using Base.Interface.DB;
 
 namespace SampleProject.Models.DB.Common;
 

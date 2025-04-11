@@ -7,9 +7,9 @@ using System.Xml.Serialization;
 using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SampleProject.Base.Models.Http;
-using SampleProject.Base.Models.Http.AuthType;
-using SampleProject.Base.Models.Http.Form;
+using Base.Models.Http;
+using Base.Models.Http.AuthType;
+using Base.Models.Http.Form;
 
 namespace SampleProject.Helpers;
 

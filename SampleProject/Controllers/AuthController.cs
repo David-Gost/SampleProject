@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
+using Base.Controllers;
 using Microsoft.AspNetCore.Mvc;
-using SampleProject.Base.Controllers;
-using SampleProject.Base.Models.Response;
+using Base.Models.Response;
 using SampleProject.Models.Custom.RequestFrom.Auth;
 using SampleProject.Services.DB.User;
 
@@ -42,7 +41,7 @@ public class AuthController : BaseApiController
     /// <summary>
     /// 交換金鑰
     /// </summary>
-    /// <param name="refreshToken"></param>
+    /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("ReAuth")]
     public async Task<IActionResult> ReAuth(ReAuthRequest request)

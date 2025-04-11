@@ -1,9 +1,9 @@
 using System.Data;
 using System.Data.SqlClient;
+using Base.Interface.DB;
 using MySqlConnector;
 using Npgsql;
 using Oracle.ManagedDataAccess.Client;
-using SampleProject.Base.Interface.DB.Repositories;
 
 namespace SampleProject.Base.Repositories;
 
@@ -47,22 +47,22 @@ public class BaseDbConnection : IBaseDbConnection
         return new MySqlConnection(dbConnectStr);
     }
 
-    /// <summary>
-    /// Sql Server連線
-    /// </summary>
-    /// <param name="dbConnectStr"></param>
-    /// <returns></returns>
-    public IDbConnection SqlServerConnection(string dbConnectStr)
-    {
-        
-        if (dbConnectStr.Equals(""))
-        {
-
-            dbConnectStr = GetDefaultConnectionString();
-        }
-
-        return new SqlConnection(dbConnectStr);
-    }
+    // /// <summary>
+    // /// Sql Server連線
+    // /// </summary>
+    // /// <param name="dbConnectStr"></param>
+    // /// <returns></returns>
+    // public IDbConnection SqlServerConnection(string dbConnectStr)
+    // {
+    //     
+    //     if (dbConnectStr.Equals(""))
+    //     {
+    //
+    //         dbConnectStr = GetDefaultConnectionString();
+    //     }
+    //
+    //     return new SqlConnection(dbConnectStr);
+    // }
 
     /// <summary>
     /// PostgreSQL 連線

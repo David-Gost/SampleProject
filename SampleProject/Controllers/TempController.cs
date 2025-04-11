@@ -1,7 +1,8 @@
 using System.Net.Mail;
 using System.Text.Json;
+using Base.Controllers;
+using Base.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using SampleProject.Base.Controllers;
 using SampleProject.Helpers;
 using SampleProject.Models.Custom.Mail;
 using SampleProject.Models.DB.Common;

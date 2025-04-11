@@ -1,8 +1,6 @@
 using System.Dynamic;
+using Base.Controllers;
 using Microsoft.AspNetCore.Mvc;
-using SampleProject.Base.Controllers;
-using SampleProject.Base.Models.File;
-using SampleProject.Helpers;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Services.DB.User;
 

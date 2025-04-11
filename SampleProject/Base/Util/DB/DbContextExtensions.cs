@@ -1,7 +1,8 @@
 using System.Data;
-using SampleProject.Base.Interface.DB.Repositories;
+using SampleProject.Database;
+using Base.Interface.DB;
 using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.Dapper;
+using Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Database;
 

@@ -1,13 +1,9 @@
-using System.Configuration;
+
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Security.Claims;
 using ElmahCore;
 using FluentValidation;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Oracle.ManagedDataAccess.Client;
-using SampleProject.Base.Models.Response;
+using Base.Models.Response;
 
 namespace SampleProject.Middleware;
 
@@ -81,13 +77,13 @@ public class ExceptionHandleMiddleware
         //紀錄log
  
         var requestBody = context.Items["requestBody"]?.ToString()!;
-        var errorData = new Error(exception, context)
+        var errorData = new Error(exception, context,requestBody)
         {
             StatusCode = httpStatusCode
         };
         await _errorLog.LogAsync(errorData);
 
         //輸出資料
-        return Task.FromResult(context.Response.WriteAsJsonAsync(result));
+        return context.Response.WriteAsJsonAsync(result);
     }
 }

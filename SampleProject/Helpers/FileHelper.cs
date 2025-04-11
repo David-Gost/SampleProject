@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.StaticFiles;
-using SampleProject.Base.Models.File;
+using Base.Models.File;
 
 namespace SampleProject.Helpers;
 

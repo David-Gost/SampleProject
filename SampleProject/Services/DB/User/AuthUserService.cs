@@ -1,4 +1,4 @@
-using SampleProject.Base.Models.ServiceResult;
+using Base.Models.ServiceResult;
 using SampleProject.Models.Custom.RequestFrom.Auth;
 using SampleProject.Models.DB.User;
 using SampleProject.Repositories.DB.User;

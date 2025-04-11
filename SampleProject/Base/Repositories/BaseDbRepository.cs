@@ -1,15 +1,15 @@
 using System.Data;
+using SampleProject.Database;
+using Base.Helpers;
+using Base.Models.DB;
+using Base.Util.DB.Dapper;
+using Base.Util.DB.EFCore;
 using Dapper;
 using Dapper.Oracle;
 using Dommel;
 using Microsoft.EntityFrameworkCore;
-using SampleProject.Base.Interface.DB;
-using SampleProject.Base.Interface.DB.Repositories;
-using SampleProject.Base.Models.DB;
-using SampleProject.Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
-using SampleProject.Helpers;
-using SampleProject.Database;
+
 
 namespace SampleProject.Base.Repositories;
 
@@ -18,6 +18,13 @@ namespace SampleProject.Base.Repositories;
 /// </summary>
 public class BaseDbRepository
 {
+    
+    protected enum ActionType
+    {
+        Insert,
+        Update
+    }
+    
     /// <summary>
     /// dapper 連接器
     /// </summary>
@@ -27,6 +34,28 @@ public class BaseDbRepository
 
     private readonly DapperContextManager _dapperContextManager;
     private readonly DbContextManager _dbContextManager;
+    
+    private static readonly AsyncLocal<ApplicationDbContext>
+        _asyncLocalContext = new AsyncLocal<ApplicationDbContext>();
+
+    /// <summary>
+    /// 預設連接db string
+    /// </summary>
+    private string dbConnectOption { set; get; } = "Default";
+
+    /// <summary>
+    /// 使用efDbConnection
+    /// </summary>
+    protected ApplicationDbContext efDbConnection
+    {
+        get
+        {
+            if (_asyncLocalContext.Value != null) return _asyncLocalContext.Value;
+            _asyncLocalContext.Value = _dbContextManager.CreateDbContext(dbConnectOption);
+            _efDbConnection = _asyncLocalContext.Value;
+            return _efDbConnection;
+        }
+    }
 
     public BaseDbRepository(DapperContextManager dapperContextManager,
         DbContextManager dbContextManager,
@@ -52,8 +81,9 @@ public class BaseDbRepository
             throw new ArgumentException("Invalid database connection option");
         }
 
-        _dapperDbConnection = _dapperContextManager.CreateDbConnection(dbConnectOption);
-        _efDbConnection = _dbContextManager.CreateDbContext(dbConnectOption);
+        this.dbConnectOption = dbConnectOption;
+        _dapperDbConnection = _dapperContextManager.CreateDbConnection(this.dbConnectOption);
+        _efDbConnection = _dbContextManager.CreateDbContext(this.dbConnectOption);
     }
 
     /// <summary>

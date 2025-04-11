@@ -1,17 +1,15 @@
 using System.Data;
+using SampleProject.Database;
+using SampleProject.Base.Repositories;
 using Dapper;
 using Dommel;
 using Dommel.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using SampleProject.Base.Interface.DB;
-using SampleProject.Base.Interface.DB.Repositories;
-using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.Dapper;
-using SampleProject.Base.Util.DB.Dapper.DommelJson;
+using Base.Util.DB.Dapper;
+using Base.Util.DB.Dapper.DommelJson;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.DB.Common;
-using SampleProject.Database;
+
 
 namespace SampleProject.Repositories.DB.Common;
 

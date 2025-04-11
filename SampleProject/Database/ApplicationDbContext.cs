@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SampleProject.Base.Util.DB.EFCore;
+using Base.Util.DB.EFCore;
 using SampleProject.Models.DB.Common;
 using SampleProject.Models.DB.User;
 

@@ -1,10 +1,10 @@
+using Base.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SampleProject.Base.Controllers;
-using SampleProject.Base.Models.File;
-using SampleProject.Base.Models.Http;
-using SampleProject.Base.Models.Http.AuthType;
-using SampleProject.Base.Models.Http.Form;
+using Base.Models.File;
+using Base.Models.Http;
+using Base.Models.Http.AuthType;
+using Base.Models.Http.Form;
 using SampleProject.Helpers;
 using SampleProject.Services.Custom;
 
@@ -117,8 +117,7 @@ public class TestController : BaseApiController
     {
         return Task.FromResult(BackCall(data));
     }
-
-    [Authorize]
+    
     [HttpPost("DbTest")]
     public Task<IActionResult> DbTest()
     {

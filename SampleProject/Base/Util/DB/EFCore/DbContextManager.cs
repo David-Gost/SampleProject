@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using SampleProject.Database;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace SampleProject.Base.Util.DB.EFCore;
 
@@ -42,6 +43,7 @@ public class DbContextManager
             // case "MSSQL":
             //     optionsBuilder.UseSqlServer(dbConnectStr);
             //     break;
+            
             case "MYSQL":
                 optionsBuilder.UseMySql(dbConnectStr, ServerVersion.AutoDetect(dbConnectStr));
                 break;

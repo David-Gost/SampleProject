@@ -1,13 +1,9 @@
 using System.Data;
-using System.Dynamic;
-using System.Linq.Expressions;
+
 using Dapper;
 using Dommel;
-using Microsoft.VisualBasic.CompilerServices;
-using Oracle.ManagedDataAccess.Client;
-using SampleProject.Base.Interface.DB.Repositories;
 using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.Dapper;
+using Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Models.Custom.RequestFrom.User;
 using SampleProject.Models.DB.User;

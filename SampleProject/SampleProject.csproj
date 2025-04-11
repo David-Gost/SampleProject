@@ -13,11 +13,7 @@
     <ItemGroup>
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="Dapper" Version="2.1.35" />
         <PackageReference Include="Dapper.Oracle" Version="2.0.3" />
-        <PackageReference Include="Dommel" Version="3.3.4" />
-        <PackageReference Include="Dommel.Json" Version="3.3.4" />
-        <PackageReference Include="ElmahCore" Version="1.2.7" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
         <PackageReference Include="Hangfire" Version="1.8.15" />
         <PackageReference Include="Hangfire.Console" Version="1.4.3" />
@@ -26,22 +22,7 @@
         <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
         <PackageReference Include="Hangfire.Storage.SQLite" Version="0.4.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.2" />
-        <PackageReference Include="MySqlConnector" Version="2.4.0" />
-        <PackageReference Include="Npgsql" Version="8.0.2" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="8.0.2" />
-        <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.21.160" />
         <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
         <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
         <PackageReference Include="System.Linq" Version="4.3.0" />
     </ItemGroup>
@@ -49,6 +30,7 @@
     <ItemGroup>
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
+        <DependentUpon>Dockerfile</DependentUpon>
       </Content>
       <Content Update="appsettings.LocalDevelopment.json.r">
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -67,6 +49,10 @@
 
     <ItemGroup>
       <Folder Include="Models\Custom\Response\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Base\Base.csproj" />
     </ItemGroup>
 
 </Project>

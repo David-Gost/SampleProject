@@ -4,7 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using SampleProject.Base.Repositories;
-using SampleProject.Base.Util.DB.Dapper;
+using Base.Util.DB.Dapper;
 using SampleProject.Base.Util.DB.EFCore;
 using SampleProject.Database;
 using SampleProject.Models.Custom.RequestFrom.Auth;
@@ -31,24 +31,21 @@ public class AuthUserRepository : BaseDbRepository
     public async Task<AuthUsers?> Login(LoginRequest request)
     {
         AuthUsers? userData = null;
-        await using (_efDbConnection)
-        {
-            userData = _efDbConnection.UserAuths.FirstOrDefault(e => e!.account == request.account);
+        userData = efDbConnection.UserAuths.FirstOrDefault(e => e!.account == request.account);
 
-            if (userData == null) return userData;
-            var validPassword = BCrypt.Net.BCrypt.Verify(request.password, userData.password);
-            if (!validPassword)
-            {
-                userData = null;
-            }
-            else
-            {
-                //產生token
-                GenerateToken(ref userData);
-                _efDbConnection.UserAuths.Update(userData);
-                await _efDbConnection.SaveChangesAsync();
-                DisposeConnect();
-            }
+        if (userData == null) return userData;
+
+        var validPassword = BCrypt.Net.BCrypt.Verify(request.password, userData.password);
+        if (!validPassword)
+        {
+            userData = null;
+        }
+        else
+        {
+            //產生token
+            GenerateToken(ref userData);
+            efDbConnection.UserAuths.Update(userData);
+            await efDbConnection.SaveChangesAsync();
         }
 
         return userData;
@@ -62,18 +59,14 @@ public class AuthUserRepository : BaseDbRepository
     public async Task<AuthUsers?> ReAuth(string refreshToken)
     {
         AuthUsers? userData = null;
-        await using (_efDbConnection)
-        {
-            userData = _efDbConnection.UserAuths.FirstOrDefault(e => e!.refreshToken == refreshToken);
+        userData = efDbConnection.UserAuths.FirstOrDefault(e => e!.refreshToken == refreshToken);
 
-            if (userData == null) return userData;
+        if (userData == null) return userData;
 
-            GenerateToken(ref userData);
-            _efDbConnection.UserAuths.Update(userData);
-            await _efDbConnection.SaveChangesAsync();
-            DisposeConnect();
-        }
-        
+        GenerateToken(ref userData);
+        efDbConnection.UserAuths.Update(userData);
+        await efDbConnection.SaveChangesAsync();
+
         return userData;
     }
 
@@ -84,11 +77,8 @@ public class AuthUserRepository : BaseDbRepository
     /// <returns></returns>
     public async Task<AuthUsers> Insert(AuthUsers user)
     {
-        await using (_efDbConnection)
-        {
-            _efDbConnection.UserAuths.Add(user);
-            await _efDbConnection.SaveChangesAsync();
-        }
+        efDbConnection.UserAuths.Add(user);
+        await _efDbConnection.SaveChangesAsync();
 
         return user;
     }
