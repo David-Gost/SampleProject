@@ -5,7 +5,7 @@ using Hangfire;
 using Newtonsoft.Json;
 using SampleProject.Models.Custom.Mail;
 using SampleProject.Services.DB.Common;
-using SampleProject.Util;
+using SampleProject.Helpers;
 
 
 namespace SampleProject.Jobs;

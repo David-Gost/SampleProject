@@ -19,6 +19,7 @@ using Oracle.ManagedDataAccess.Client;
 using Base.Util.DB;
 using Base.Util.DB.Dapper.DommelBuilder;
 using Base.Util.Filter;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SampleProject.Base.Util.DB;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
@@ -226,22 +227,48 @@ if (elmahIsOn)
 
 #endregion
 
+#region 設定Cors策略
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(_ => true)
+            .AllowCredentials();
+    });
+});
+
+
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAssertion(_ => true)
+        .Build());
+
+#endregion
+
 builder.Services.AddControllers(options =>
 {
-    var policy = new AuthorizationPolicyBuilder()
-        .RequireAssertion(_ => true)
-        .Build();
-    options.Filters.Add(new AllowAnonymousFilter());
-    options.Filters.Add(new AuthorizeFilter(policy));
-
     //加入自訂的model檢查
     options.Filters.Add<ModelValidationAttribute>();
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.MaxDepth = 64; // 增加最大深度
+    options.JsonSerializerOptions.PropertyNamingPolicy = null; // 保持屬性名稱不變
+    options.JsonSerializerOptions.DefaultIgnoreCondition =
+        System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull; // 忽略null值
+    options.JsonSerializerOptions.ReferenceHandler =
+        System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // 忽略循環引用
 });
 
 #region Api Auth規則設定
 
-builder.Services.AddAuthentication("Bearer").AddScheme<BaseSchemeOptions, BaseTokenHandler>("Bearer", options => { });
-
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddScheme<BaseSchemeOptions, BaseTokenHandler>(JwtBearerDefaults.AuthenticationScheme, options => { });
 #endregion
 
 #region 專案資源資料夾

@@ -2,7 +2,6 @@ using System.Dynamic;
 using System.Net.Mail;
 using SampleProject.Models.DB.Common;
 using SampleProject.Repositories.DB.Common;
-using SampleProject.Util;
 
 namespace SampleProject.Services.DB.Common;
 

@@ -7,7 +7,7 @@ using SampleProject.Helpers;
 using SampleProject.Models.Custom.Mail;
 using SampleProject.Models.DB.Common;
 using SampleProject.Services.DB.Common;
-using SampleProject.Util;
+using SampleProject.Helpers;
 
 namespace SampleProject.Controllers;
 

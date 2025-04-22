@@ -34,6 +34,9 @@ public static class DbContextExtensions
             var dbContextManager = serviceProvider.GetRequiredService<DbContextManager>();
             dbContextManager.ConfigureDbContext(options);
         });
+        
+        //加入載入多型器
+        builder.Services.AddScoped<PolymorphicLoader>();
 
         return builder;
     }

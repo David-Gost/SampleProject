@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using SampleProject.Models.Custom.Mail;
 
-namespace SampleProject.Util;
+namespace SampleProject.Helpers;
 
 public static class SendMailHelper
 {

@@ -94,8 +94,10 @@ public class AuthUserRepository : BaseDbRepository
             return;
         }
 
+        //jwt相關設定
         var jwtSettings = _configuration.GetSection("SystemOption").GetSection("JwtSettings");
         var secretKey = jwtSettings.GetValue<string>("Secret", "")!;
+        var allowMultiClients = jwtSettings.GetValue<bool>("AllowMultipleClients", false);
 
         // 確保密鑰長度至少為 32 字節
         if (string.IsNullOrEmpty(secretKey) || secretKey.Length < 32)
