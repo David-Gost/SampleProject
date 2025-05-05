@@ -15,4 +15,11 @@ public class ValidatorHelper
         rules(validator);
         return validator.Validate(model);
     }
+    
+    public static async Task<ValidationResult> ValidateAsync<T>(T model, Action<AbstractValidator<T>> rules)
+    {
+        var validator = new InlineValidator<T>();
+        rules(validator);
+        return await validator.ValidateAsync(model);
+    }
 }

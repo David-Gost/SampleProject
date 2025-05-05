@@ -1,14 +1,15 @@
 ﻿# 構建階段
 FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
+WORKDIR /app
 
 # 複製專案文件
-COPY ["SampleProject.csproj", "SampleProject/"]
+COPY ./Base ./Base
+COPY ./SampleProject ./SampleProject
+
+# 還原 NuGet 套件
 RUN dotnet restore "SampleProject/SampleProject.csproj"
 
-WORKDIR "/src/SampleProject"
-COPY . .
 # 安裝 Entity Framework Core 工具
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"

@@ -20,6 +20,8 @@ using Base.Util.DB;
 using Base.Util.DB.Dapper.DommelBuilder;
 using Base.Util.Filter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Newtonsoft.Json;
 using SampleProject.Base.Util.DB;
 using SampleProject.Helpers;
 using SampleProject.Interface.Elmah;
@@ -32,12 +34,41 @@ using SQLite;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+#region 環境變數
+
+// 添加環境變量配置
+builder.Configuration.AddEnvironmentVariables();
+
+// 替換配置中的值，如果環境變量存在的話
+var config = builder.Configuration;
+
+// 處理 AppKeys
+var appKeys = Environment.GetEnvironmentVariable("APP_KEYS");
+if (!string.IsNullOrEmpty(appKeys))
+{
+    config["AppKeys"] = appKeys;
+}
+
+// 處理 JWT Secret
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+if (!string.IsNullOrEmpty(jwtSecret))
+{
+    config["SystemOption:JwtSettings:Secret"] = jwtSecret;
+}
+
+// 處理數據庫連接字符串
+var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
+if (!string.IsNullOrEmpty(dbConnection))
+{
+    config["DBConnection:Default:ConnectionString"] = dbConnection;
+}
+
+#endregion
 
 //於此撰寫手動注入
 builder.InitDbContext();
 
 //使用 AutoFuc注入符合命名空間的class
-var config = builder.Configuration;
 var env = builder.Environment;
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
@@ -262,6 +293,18 @@ builder.Services.AddControllers(options =>
         System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // 忽略循環引用
 });
 
+#region 健康度檢查
+
+var healthCheckConfig = systemOptionDictionary.GetValueOrDefault("HealthCheckConfig");
+var healthCheckIsOn = healthCheckConfig!.GetValue("IsOn", false);
+
+if (healthCheckIsOn)
+{
+    builder.Services.AddHealthChecks();
+}
+
+#endregion
+
 #region Api Auth規則設定
 
 builder.Services.AddAuthentication(options =>
@@ -404,6 +447,41 @@ if (autoMigrationEnabled)
 //     var roleSeeder = services.GetRequiredService<RoleSeeder>();
 //     await roleSeeder.SeedAsync();
 // }
+
+#endregion
+
+#region 健康度檢查
+
+if (healthCheckIsOn)
+{
+    var healthCheckPath = healthCheckConfig!.GetValue<string>("Path") ?? "";
+    if (string.IsNullOrEmpty(healthCheckPath) || healthCheckPath.TrimStart('/') == "/")
+    {
+        healthCheckPath = "/health";
+    }
+
+    app.MapHealthChecks($"/{healthCheckPath.TrimStart('/')}", new HealthCheckOptions
+    {
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+
+            var json = new
+            {
+                status = report.Status.ToString(),
+                errors = report.Entries.Select(entry => new
+                {
+                    name = entry.Key,
+                    status = entry.Value.Status.ToString(),
+                    description = entry.Value.Description,
+                    data = entry.Value.Data
+                })
+            };
+
+            await context.Response.WriteAsync(JsonConvert.SerializeObject(json, Formatting.Indented));
+        }
+    });
+}
 
 #endregion
 
