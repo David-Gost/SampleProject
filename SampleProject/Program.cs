@@ -488,6 +488,7 @@ if (healthCheckIsOn)
 app.UseMiddleware<UrlPathAuthMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ExceptionHandleMiddleware>();
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
