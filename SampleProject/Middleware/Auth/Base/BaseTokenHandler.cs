@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using SampleProject.Services.DB.User;
 
 namespace SampleProject.Middleware.Auth.Base;
 
@@ -14,14 +15,16 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
     private readonly ILoggerFactory _logger;
     private readonly UrlEncoder _encoder;
     private readonly IConfiguration _configuration;
+    private readonly AuthUserService _authUserService;
 
     public BaseTokenHandler(IOptionsMonitor<BaseSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder,
-        IConfiguration configuration) : base(options, logger, encoder)
+        IConfiguration configuration, AuthUserService authUserService) : base(options, logger, encoder)
     {
         _options = options;
         _logger = logger;
         _encoder = encoder;
         _configuration = configuration;
+        _authUserService = authUserService;
     }
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -29,13 +32,16 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
         AuthenticateResult authResult = null;
         var checkStep = true;
         var endpoint = Context.GetEndpoint();
+        
         var allowAnonymous = endpoint?.Metadata.GetMetadata<IAllowAnonymous>();
-
+        var authorizeAttribute = endpoint?.Metadata.GetMetadata<AuthorizeAttribute>();
+        
         //檢查到有AllowAnonymous時，不認證
-        if (allowAnonymous != null)
+        if (authorizeAttribute == null || allowAnonymous != null)
         {
-            checkStep = false;
             authResult = AuthenticateResult.NoResult();
+            await HandleChallengeAsync(new AuthenticationProperties()).ConfigureAwait(false);
+            return authResult;
         }
 
         var authorizationHeader = "";
@@ -62,7 +68,7 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
             token = authorizationHeader["Bearer ".Length..].Trim();
         }
 
-        if (string.IsNullOrEmpty(token))
+        if (checkStep && string.IsNullOrEmpty(token))
         {
             checkStep = false;
             authResult = AuthenticateResult.Fail("Token is empty.");
@@ -72,7 +78,7 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
         {
             try
             {
-                authResult = ValidateToken(token);
+                authResult = await ValidateToken(token);
             }
             catch (Exception ex)
             {
@@ -91,7 +97,7 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
     /// </summary>
     /// <param name="token"></param>
     /// <returns></returns>
-    private AuthenticateResult ValidateToken(string token)
+    private async Task<AuthenticateResult> ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var jwtSettings = _configuration.GetSection("SystemOption").GetSection("JwtSettings");
@@ -116,6 +122,13 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
             {
                 return AuthenticateResult.Fail("Invalid token type.");
             }
+
+            //驗證accessToken是否有效
+            // var tokenValidResult = await _authUserService.ValidAccessToken(token);
+            // if (tokenValidResult.statusCode == 0)
+            // {
+            //     return AuthenticateResult.Fail("Token is invalid.");
+            // }
 
             var identity = new ClaimsIdentity(principal.Claims, Scheme.Name);
             var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);

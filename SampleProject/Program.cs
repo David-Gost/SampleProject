@@ -28,12 +28,14 @@ using SampleProject.Interface.Elmah;
 using SampleProject.Jobs;
 using SampleProject.Middleware;
 using SampleProject.Middleware.Auth.Base;
+using SampleProject.Middleware.Hangfire;
 using SampleProject.Services.DB.User;
 using SQLite;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 #region 環境變數
 
 // 添加環境變量配置
@@ -312,6 +314,26 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddScheme<BaseSchemeOptions, BaseTokenHandler>(JwtBearerDefaults.AuthenticationScheme, options => { });
+
+#endregion
+
+#region Session 服務
+
+var sessionConfig = systemOptionDictionary.GetValueOrDefault("SessionConfig");
+var sessionIsOn = sessionConfig!.GetValue("IsOn", false);
+
+if (sessionIsOn)
+{
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddSession(options =>
+    {
+        //儲存30分鐘
+        options.IdleTimeout = TimeSpan.FromMinutes(30);
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+    });
+}
+
 #endregion
 
 #region 專案資源資料夾
@@ -350,6 +372,15 @@ if (pathDatas.Any())
 #endregion
 
 var app = builder.Build();
+
+#region Session 服務
+
+if (sessionIsOn)
+{
+    app.UseSession();
+}
+
+#endregion
 
 #region UrlPath驗證設定
 
@@ -399,7 +430,10 @@ app.UseStaticFiles();
 if (hangfireStatus)
 {
     //Hangfire相關啟用設定
-    app.UseHangfireDashboard("/hangfire");
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireAuthorizationFilter()]
+    });
 
     #region 加入排程
 

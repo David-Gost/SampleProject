@@ -10,6 +10,8 @@ namespace SampleProject.Middleware;
 /// </summary>
 public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configuration)
 {
+    private readonly string SESSION_URL_AUTH_VALID_STATUS = "session_url_auth_valid_status";
+
     public async Task InvokeAsync(HttpContext context)
     {
         var middlewareAuthConfig = configuration.GetSection("SystemOption:MiddlewareAuthConfig");
@@ -18,21 +20,28 @@ public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configur
 
         if (!isOn)
         {
-            
             await next(context);
             return;
         }
 
         var authInfo = middlewareAuthConfig.GetSection("AuthInfo");
 
-        var headers = context.Request.Headers;
-
         var authStatus = false;
-        if (headers.TryGetValue("Authorization", out var authStr))
-        {
-            var authHeader = authStr.ToString();
 
-            var baseAuthInfo = AuthenticationHeaderValue.Parse(authHeader);
+        var authHeader = GetUrlAuthToken(context);
+        var validStatus = context.Session.GetInt32(SESSION_URL_AUTH_VALID_STATUS);
+
+        if (validStatus == 1)
+        {
+            await next(context);
+            //更新，拉長使用時間
+            context.Session.SetInt32(SESSION_URL_AUTH_VALID_STATUS, 1);
+            return;
+        }
+
+        if (authHeader != null)
+        {
+            var baseAuthInfo = AuthenticationHeaderValue.Parse(authHeader!);
 
             var authScheme = baseAuthInfo.Scheme;
             var authParameter = baseAuthInfo.Parameter ?? "";
@@ -67,6 +76,7 @@ public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configur
 
                 context.User = principal;
                 authStatus = true;
+                context.Session.SetInt32(SESSION_URL_AUTH_VALID_STATUS, 1);
             }
         }
 
@@ -78,5 +88,20 @@ public class UrlPathAuthMiddleware(RequestDelegate next, IConfiguration configur
 
         context.Response.StatusCode = 401;
         context.Response.Headers.WWWAuthenticate = "Basic";
+    }
+
+    /// <summary>
+    /// 取得url auth token
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    private string? GetUrlAuthToken(HttpContext context)
+    {
+        if (context.Request.Headers.TryGetValue("Authorization", out var authStr))
+        {
+            return (string)authStr!;
+        }
+
+        return null;
     }
 }
