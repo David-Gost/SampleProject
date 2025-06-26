@@ -19,19 +19,41 @@ dotnet user-secrets set "AppKeys" "$(openssl rand -base64 32)"
 
 - 產生migrate
 
+linux/mac
 ~~~bash
 export ASPNETCORE_ENVIRONMENT=LocalDevelopment; dotnet ef migrations add {名稱} --context ApplicationDbContext --output-dir Database/Migration
 ~~~
+windows
+~~~bash
+$env:ASPNETCORE_ENVIRONMENT="LocalDevelopment"; dotnet ef migrations add {名稱} --context ApplicationDbContext --output-dir Database/Migration
+~~~
 
+---
 - 更新到最新migrate
+
+linux/mac
 ~~~bash
 export ASPNETCORE_ENVIRONMENT=LocalDevelopment; dotnet ef database update --context ApplicationDbContext
 ~~~
+windows
+~~~bash
+$env:ASPNETCORE_ENVIRONMENT="LocalDevelopment"; dotnet ef database update --context ApplicationDbContext
+~~~
+---
 
 - 恢復到指定migrate
+
+linux/mac
 ~~~bash
 export ASPNETCORE_ENVIRONMENT=LocalDevelopment; dotnet ef database update {檔案名稱} --context ApplicationDbContext
 ~~~
+
+windows
+~~~bash
+$env:ASPNETCORE_ENVIRONMENT="LocalDevelopment"; dotnet ef database update {檔案名稱} --context ApplicationDbContext
+~~~
+
+---
 
 ## 基本規範
 
