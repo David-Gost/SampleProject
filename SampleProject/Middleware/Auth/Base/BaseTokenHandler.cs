@@ -39,9 +39,7 @@ public class BaseTokenHandler : AuthenticationHandler<BaseSchemeOptions>
         //檢查到有AllowAnonymous時，不認證
         if (authorizeAttribute == null || allowAnonymous != null)
         {
-            authResult = AuthenticateResult.NoResult();
-            await HandleChallengeAsync(new AuthenticationProperties()).ConfigureAwait(false);
-            return authResult;
+            return AuthenticateResult.NoResult();
         }
 
         var authorizationHeader = "";
