@@ -52,6 +52,18 @@ windows
 ~~~bash
 $env:ASPNETCORE_ENVIRONMENT="LocalDevelopment"; dotnet ef database update {檔案名稱} --context ApplicationDbContext
 ~~~
+---
+
+- 刪除最後一個未執行變更的migration
+
+linux/mac
+~~~bash
+export ASPNETCORE_ENVIRONMENT=LocalDevelopment; dotnet ef migrations remove --context ApplicationDbContext
+~~~
+windows
+~~~bash
+$env:ASPNETCORE_ENVIRONMENT="LocalDevelopment"; dotnet ef migrations remove --context ApplicationDbContext
+~~~
 
 ---
 
