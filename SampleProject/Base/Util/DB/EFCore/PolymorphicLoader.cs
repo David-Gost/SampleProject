@@ -14,6 +14,9 @@ public class PolymorphicLoader
     private readonly ApplicationDbContext _dbContext;
     private string _prefix = "";
 
+    // 可為每個 targetType 指定多層 Include 路徑
+    private readonly Dictionary<string, string[]> _includePaths = new();
+
     public PolymorphicLoader(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
@@ -24,85 +27,111 @@ public class PolymorphicLoader
     {
         _prefix = prefix;
     }
+    
+    /// <summary>
+    /// 註冊 targetType 的 Include 路徑
+    /// </summary>
+    /// <param name="typeName">多型對應model</param>
+    /// <param name="includePaths">include對象</param>
+    public void RegisterIncludes(string typeName, params string[] includePaths)
+    {
+        _includePaths[typeName] = includePaths;
+    }
 
     /// <summary>
     /// 載入多型的關聯資料
     /// </summary>
+    /// <param name="input"></param>
+    /// <param name="cancellationToken"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <exception cref="Exception"></exception>
     public async Task LoadAsync<T>(object? input, CancellationToken cancellationToken = default)
         where T : class
     {
-        try
+        if (input == null) return;
+
+        var isEnumerable = input is IEnumerable<T>;
+        var models = isEnumerable ? ((IEnumerable<T>)input).ToList() : [(T)input];
+
+        var typeProp = typeof(T).GetProperty($"{_prefix}Type");
+        var idProp = typeof(T).GetProperty($"{_prefix}Id");
+        var targetProp = typeof(T).GetProperty($"{_prefix}");
+
+        if (typeProp == null || idProp == null || targetProp == null) return;
+
+        var grouped = models
+            .Where(m => typeProp.GetValue(m) is string && idProp.GetValue(m) is int)
+            .GroupBy(m => typeProp.GetValue(m)!.ToString());
+
+        foreach (var group in grouped)
         {
-            if (input == null) return;
+            var typeName = group.Key!;
+            var ids = group.Select(x => (int)idProp.GetValue(x)!).Distinct().ToList();
 
-            var isEnumerable = input is IEnumerable<T>;
-            var models = isEnumerable ? ((IEnumerable<T>)input).ToList() : [(T)input];
+            var targetType = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t => t.Name == typeName || t.FullName == typeName);
 
-            var typeProp = typeof(T).GetProperty($"{_prefix}Type");
-            var idProp = typeof(T).GetProperty($"{_prefix}Id");
-            var targetProp = typeof(T).GetProperty($"{_prefix}");
+            if (targetType == null) continue;
 
-            if (typeProp == null || idProp == null || targetProp == null) return;
+            var dbSet = _dbContext.GetType()
+                .GetMethod("Set", Type.EmptyTypes)!
+                .MakeGenericMethod(targetType)
+                .Invoke(_dbContext, null) as IQueryable ?? throw new Exception("DbSet is null");
 
-            var grouped = models
-                .Where(m => typeProp.GetValue(m) is string && idProp.GetValue(m) is int)
-                .GroupBy(m => typeProp.GetValue(m)!.ToString());
-
-            foreach (var group in grouped)
+            // 動態 Include
+            if (_includePaths.TryGetValue(typeName, out var paths))
             {
-                var typeName = group.Key!;
-                var ids = group.Select(x => (int)idProp.GetValue(x)!).Distinct().ToList();
+                var dynamicDbSet = paths.Aggregate<string?, dynamic>(dbSet, (current, path) => EntityFrameworkQueryableExtensions.Include(current, path)); // 轉成 dynamic
+                dbSet = dynamicDbSet;
+            }
 
-                var targetType = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.Name == typeName || t.FullName == typeName);
+            // 找主鍵
+            var keyProp = targetType.GetProperties()
+                .FirstOrDefault(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase) ||
+                                     p.GetCustomAttributes(typeof(KeyAttribute), true).Length != 0);
 
-                if (targetType == null) continue;
+            if (keyProp == null) continue;
 
-                var dbSet = _dbContext.GetType().GetMethod("Set", Type.EmptyTypes)!
-                    .MakeGenericMethod(targetType)
-                    .Invoke(_dbContext, null) as IQueryable;
+            // 建立 Expression<Func<TargetType, bool>> 條件
+            var parameter = Expression.Parameter(targetType, "e");
+            var property = Expression.Property(parameter, keyProp.Name);
 
-                var keyProp = targetType.GetProperties()
-                    .FirstOrDefault(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase) ||
-                                         p.GetCustomAttributes(typeof(KeyAttribute), true).Length != 0);
+            var containsMethod = typeof(List<int>).GetMethod("Contains", [typeof(int)])!;
+            var idsExpr = Expression.Constant(ids);
+            var body = Expression.Call(idsExpr, containsMethod, property);
+            var lambda = Expression.Lambda(body, parameter);
 
-                if (keyProp == null) continue;
+            var whereMethod = typeof(Queryable).GetMethods()
+                .First(m => m.Name == "Where" && m.GetParameters().Length == 2)
+                .MakeGenericMethod(targetType);
 
-                // 建立 Expression<Func<T, bool>> 查詢條件
-                var parameter = Expression.Parameter(targetType, "e");
-                var property = Expression.Property(parameter, keyProp.Name);
+            var query = (IQueryable)whereMethod.Invoke(null, [dbSet, lambda])!;
 
-                var containsMethod = typeof(List<int>).GetMethod("Contains", [typeof(int)])!;
-                var idsExpr = Expression.Constant(ids);
-                var body = Expression.Call(idsExpr, containsMethod, property);
+            var list = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                .ToListAsync((dynamic)query, cancellationToken);
 
-                var lambda = Expression.Lambda(body, parameter);
+            // 回填
+            foreach (var model in group)
+            {
+                var modelId = (int)idProp.GetValue(model)!;
+                object? match = null;
 
-                var whereMethod = typeof(Queryable).GetMethods()
-                    .First(m => m.Name == "Where" && m.GetParameters().Length == 2)
-                    .MakeGenericMethod(targetType);
-
-                var query = (IQueryable<object>)whereMethod.Invoke(null, [dbSet!, lambda])!;
-
-                var list = await query.ToListAsync(cancellationToken);
-
-                // 使用 Reflection 拿 mappingData 的 Id 欄位值
-                foreach (var model in group)
+                foreach (var item in list)
                 {
-                    var modelId = (int)idProp.GetValue(model)!;
-                    var match = list.FirstOrDefault(e => (int)keyProp.GetValue(e)! == modelId);
-                    if (match != null)
+                    var itemId = (int)keyProp.GetValue(item)!;
+                    if (itemId == modelId)
                     {
-                        targetProp.SetValue(model, match);
+                        match = item;
+                        break;
                     }
                 }
+
+                if (match != null)
+                {
+                    targetProp.SetValue(model, match);
+                }
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
         }
     }
 }
