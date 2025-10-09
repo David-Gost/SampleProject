@@ -60,6 +60,10 @@
       "ValidateLifetime": true,
       "ValidateIssuerSigningKey": true,
       "AllowMultipleClients": true
+    },
+    "DeBugConfigs": {
+      "Remark": "debug相關設定",
+      "IsOn": false
     }
   },
   "DBConnection": {

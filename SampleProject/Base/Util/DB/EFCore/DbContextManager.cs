@@ -21,6 +21,16 @@ public class DbContextManager
     public ApplicationDbContext CreateDbContext(string dbConnectOption = "Default" )
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+        
+        var systemOptions = _configuration.GetSection("SystemOption");
+        var deBugConfig = systemOptions.GetSection("DeBugConfigs");
+        var isDebug = deBugConfig.GetValue<bool>("IsOn");
+
+        if (isDebug)
+        {
+            optionsBuilder.EnableSensitiveDataLogging();
+            optionsBuilder.LogTo(Console.WriteLine);   
+        }
         ConfigureDbContext(optionsBuilder,dbConnectOption);
         return new ApplicationDbContext(optionsBuilder.Options);
     }

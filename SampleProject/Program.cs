@@ -44,6 +44,24 @@ builder.Configuration.AddEnvironmentVariables();
 // 替換配置中的值，如果環境變量存在的話
 var config = builder.Configuration;
 
+//DEBUG模式
+var isDebugStr = Environment.GetEnvironmentVariable("SYSTEM_OPTION_DEBUG_IS_ON");
+if (!string.IsNullOrEmpty(isDebugStr))
+{
+    if (bool.TryParse(isDebugStr, out var isDebug))
+    {
+        config["SystemOption:DeBugConfigs:IsOn"] = isDebug.ToString().ToLower();
+    }
+    else
+    {
+        config["SystemOption:DeBugConfigs:IsOn"] = false.ToString();
+    }
+}
+else
+{
+    config["SystemOption:DeBugConfigs:IsOn"] = false.ToString();
+}
+
 // 處理 AppKeys
 var appKeys = Environment.GetEnvironmentVariable("APP_KEYS");
 if (!string.IsNullOrEmpty(appKeys))
