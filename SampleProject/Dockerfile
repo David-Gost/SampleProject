@@ -11,7 +11,7 @@ COPY ./SampleProject ./SampleProject
 RUN dotnet restore "SampleProject/SampleProject.csproj"
 
 # 安裝 Entity Framework Core 工具
-RUN dotnet tool install --global dotnet-ef
+RUN dotnet tool install --global dotnet-ef --version 8.0.22
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # 構建和發布

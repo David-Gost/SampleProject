@@ -21,6 +21,7 @@ using Base.Util.DB.Dapper.DommelBuilder;
 using Base.Util.Filter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Newtonsoft.Json;
 using SampleProject.Base.Util.DB;
 using SampleProject.Helpers;
@@ -389,7 +390,24 @@ if (pathDatas.Any())
 
 #endregion
 
+#region 設定轉發標頭
+
+// 設定轉發標頭選項
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    
+    // 清除已知的代理和網路，以允許來自任何 IP 的代理轉發
+    options.KnownProxies.Clear();
+    options.KnownNetworks.Clear();
+});
+
+#endregion
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 #region Session 服務
 
