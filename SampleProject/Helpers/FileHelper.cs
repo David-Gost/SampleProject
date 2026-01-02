@@ -35,6 +35,43 @@ public static class FileHelper
     }
 
     /// <summary>
+    /// 刪除檔案
+    /// </summary>
+    /// <param name="filePath"></param>
+    public static void DeleteFile(string filePath = "")
+    {
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), BasePath, filePath);
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+        }
+    }
+
+    /// <summary>
+    /// 刪除多筆檔案
+    /// </summary>
+    /// <param name="filePaths"></param>
+    public static void DeleteFiles(List<string>? filePaths = null)
+    {
+        if (filePaths == null) return;
+        foreach (var filePath in filePaths)
+        {
+            DeleteFile(filePath);
+        }
+    }
+
+    /// <summary>
+    /// 驗證檔案是否存在
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <returns></returns>
+    public static bool ValidateFileExits(string filePath = "")
+    {
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), BasePath, filePath);
+        return File.Exists(fullPath);
+    }
+
+    /// <summary>
     /// 移動檔案
     /// </summary>
     /// <param name="fromFilePath">不包含跟目錄的相對路徑</param>
@@ -366,9 +403,9 @@ public static class FileHelper
         try
         {
             // //依照檔案內容生成md5
-            var md5 = MD5.Create();
+            using var sha256 = SHA256.Create();
             var stream = formFile!.OpenReadStream();
-            var hashData = md5.ComputeHash(stream);
+            var hashData = sha256.ComputeHash(stream);
             var hashString = DataHelper.Byte2Hash(hashData);
 
             //新檔名
@@ -412,16 +449,26 @@ public static class FileHelper
     /// <param name="pathName"></param>
     public static void CheckPath(string pathName)
     {
+        
+        var projectRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
+        var fullPathToCreate = Path.GetFullPath(pathName);
+
+        // 驗證：正規化後的路徑是否以專案根目錄開頭。
+        // 這可以確保路徑不會遍歷到專案目錄之外。
+        if (!fullPathToCreate.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Invalid path specified. Path traversal is not allowed.");
+        }
+
         if (string.IsNullOrEmpty(pathName))
         {
             return;
         }
 
-        var pathVal = Path.Combine(Directory.GetCurrentDirectory(), pathName);
-
-        if (!Directory.Exists(pathVal))
+        // 現在路徑是安全的，可以建立目錄
+        if (!Directory.Exists(fullPathToCreate))
         {
-            Directory.CreateDirectory(pathVal);
+            Directory.CreateDirectory(fullPathToCreate);
         }
     }
 
@@ -433,10 +480,10 @@ public static class FileHelper
     /// <param name="allowMimeType"></param>
     /// <param name="allowFileSize"></param>
     /// <returns></returns>
-    private static CheckUploadFileModel CheckFile(
+    public static CheckUploadFileModel CheckFile(
         IFormFile? uploadFile,
-        List<string> allowExtension = null,
-        List<string> allowMimeType = null,
+        List<string>? allowExtension = null,
+        List<string>? allowMimeType = null,
         int allowFileSize = 0)
     {
         var checkUploadFileModel = new CheckUploadFileModel

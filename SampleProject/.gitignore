@@ -2,8 +2,11 @@
 /.git
 /.idea
 ./obj
-/wwwroot/
+/wwwroot/*
 !/wwwroot/index.html
+!/wwwroot/logs/
+/wwwroot/logs/*
+!/wwwroot/logs/views/
 /bin/
 /obj/
 /Hangfire/

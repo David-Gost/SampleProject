@@ -1,5 +1,5 @@
 ﻿# 構建階段
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /app
 
@@ -11,16 +11,18 @@ COPY ./SampleProject ./SampleProject
 RUN dotnet restore "SampleProject/SampleProject.csproj"
 
 # 安裝 Entity Framework Core 工具
-RUN dotnet tool install --global dotnet-ef --version 8.0.22
+RUN dotnet tool install --global dotnet-ef --version 10.0.0
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # 構建和發布
-RUN dotnet build "SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/build 
-RUN dotnet publish "SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet build "SampleProject/SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/build 
+RUN dotnet publish "SampleProject/SampleProject.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # 最終階段
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+COPY --from=build /app/SampleProject/Command /app/Command
+COPY --from=build /app/publish/wwwroot /app/source_wwwroot 
 COPY --from=build /app/publish .
 
 # 複製 EF Core 工具到最終鏡像
@@ -28,6 +30,16 @@ COPY --from=build /root/.dotnet/tools /root/.dotnet/tools
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # 移除暫存
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y \
+        net-tools \
+        iputils-ping \
+        telnet \
+        openssh-client \
+        vim \
+        curl \
+        rsync \
+    && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["dotnet", "SampleProject.dll"]
+RUN chmod +x /app/Command/copyfile.sh
+ENTRYPOINT ["/app/Command/copyfile.sh"]
+CMD ["dotnet", "SampleProject.dll"]

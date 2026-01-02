@@ -1,21 +1,23 @@
 
 using System.Net;
-using ElmahCore;
+using System.Runtime.InteropServices.JavaScript;
 using FluentValidation;
 using Oracle.ManagedDataAccess.Client;
 using Base.Models.Response;
+using SampleProject.Models.Custom.Log;
+using SampleProject.Services.Custom.Log;
 
 namespace SampleProject.Middleware;
 
 public class ExceptionHandleMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ErrorLog _errorLog;
+    private readonly RequestLoggerService _requestLoggerService;
 
-    public ExceptionHandleMiddleware(RequestDelegate next, ErrorLog errorLog)
+    public ExceptionHandleMiddleware(RequestDelegate next, RequestLoggerService requestLoggerService)
     {
         _next = next;
-        _errorLog = errorLog;
+        _requestLoggerService = requestLoggerService;
     }
 
     /// <summary>
@@ -75,13 +77,12 @@ public class ExceptionHandleMiddleware
         context.Response.StatusCode = httpStatusCode;
 
         //紀錄log
- 
         var requestBody = context.Items["requestBody"]?.ToString()!;
-        var errorData = new Error(exception, context,requestBody)
+        var errorData = new ErrorLoggerModel(exception, context, requestBody)
         {
-            StatusCode = httpStatusCode
+            statusCode = httpStatusCode
         };
-        await _errorLog.LogAsync(errorData);
+        await _requestLoggerService.LogAsync(errorData);
 
         //輸出資料
         return context.Response.WriteAsJsonAsync(result);
